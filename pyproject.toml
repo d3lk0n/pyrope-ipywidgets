@@ -1,0 +1,55 @@
+[build-system]
+requires = [
+    "hatchling>=1.21.1",
+    "jupyterlab>=4.0.0,<5",
+    "hatch-nodejs-version>=0.3.2",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyrope_ipywidgets"
+requires-python = ">=3.10"
+dependencies = [
+    "ipywidgets>=8.0.0",
+]
+version = "0.1.0"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build]
+artifacts = [
+    "pyrope_ipywidgets/nbextension/index.*",
+    "pyrope_ipywidgets/labextension/*.tgz",
+    "pyrope_ipywidgets/labextension",
+]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"pyrope_ipywidgets/nbextension" = "share/jupyter/nbextensions/pyrope_ipywidgets"
+"pyrope_ipywidgets/labextension" = "share/jupyter/labextensions/pyrope-ipywidgets"
+"./install.json" = "share/jupyter/labextensions/pyrope-ipywidgets/install.json"
+"./pyrope_ipywidgets.json" = "etc/jupyter/nbconfig/notebook.d/pyrope_ipywidgets.json"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    ".github",
+]
+
+[tool.hatch.build.hooks.jupyter-builder]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "pyrope_ipywidgets/nbextension/index.js",
+    "pyrope_ipywidgets/labextension/package.json",
+]
+skip-if-exists = [
+    "pyrope_ipywidgets/nbextension/index.js",
+    "pyrope_ipywidgets/labextension/package.json",
+]
+dependencies = [
+    "hatch-jupyter-builder>=0.8.3",
+]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+path = "."
+build_cmd = "build:prod"
+npm = ["jlpm"]

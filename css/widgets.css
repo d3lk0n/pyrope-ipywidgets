@@ -1,0 +1,387 @@
+
+/* Global variables */
+:root {
+    --blue: #1476fb;
+    --light-blue: #b8e2f4;
+    --red: #ff0000;
+    --light-red: #ffcccb;
+    --grey: #8b8b8b;
+    --light-grey: #efefef;
+    --yellow: #f8b35e;
+    --light-yellow: #fcdfb7;
+    --black: #000000;
+    --slider-thumb-size: 14px;
+}
+
+.pyrope {
+    margin-top: 3px;
+    margin-bottom: 3px;
+    font-size: 14px;
+    line-height: 1;
+    font-family: var(--jp-ui-font-family);
+}
+
+hr.pyrope {
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+}
+hr.pyrope.hide {
+    display: none;
+}
+hr.pyrope.tooltip {
+    display: none;
+    margin: 3px 0px;
+    border-top: 1px solid var(--grey);
+}
+
+div.pyrope {
+    padding: 1ch 2ch;
+}
+div.pyrope:empty {
+    display: none;
+}
+div.pyrope.problem div.lm-Widget[data-mime-type="text/markdown"] {
+    overflow: visible;
+}
+
+div.lm-Widget:has(div.pyrope) {
+    overflow: visible;
+}
+
+div.pyrope.alert {
+    margin: 1ch 2ch;
+    padding: 0.5ch 2ch;
+    display: none;
+    width: fit-content;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+}
+div.pyrope.alert.show {
+    display: flex;
+    align-items: center;
+}
+div.pyrope.alert span.pyrope.alert-content {
+    padding-left: 1.5ch;
+}
+div.pyrope.alert.warning {
+    border-color: var(--yellow);
+    background-color: var(--light-yellow);
+}
+div.pyrope.alert.info {
+    border-color: var(--blue);
+    background-color: var(--light-blue);
+}
+div.pyrope.alert i.bi.pyrope {
+    font-size: 20px;
+}
+
+div.pyrope.hints {
+    padding-top: 1ch;
+    padding-bottom: 0ch;
+    padding-left: 0ch;
+    padding-right: 0ch;
+}
+div.pyrope.hints div.pyrope.info .jp-RenderedHTMLCommon code {
+    background-color: inherit;
+}
+
+div.pyrope.tooltip {
+    display: inline-block;
+    position: relative;
+}
+button.pyrope.ifield {
+    cursor: pointer;
+    border: 1px solid var(--grey);
+    margin-left: 3px;
+    padding-bottom: 3px;
+}
+button.pyrope.ifield:disabled {
+    cursor: not-allowed;
+}
+button.pyrope.ifield i.bi.pyrope {
+    font-size: 12px;
+}
+button.pyrope.ifield span.pyrope {
+    visibility: collapse;
+    transition: opacity 0.3s;
+    position: absolute;
+    z-index: 1;
+    opacity: 0;
+}
+button.pyrope.ifield span.show {
+    display: block;
+    visibility: visible;
+    top: 105%;
+    left: 30%;
+    background-color: var(--light-grey);
+    height: fit-content;
+    border: 1px solid var(--grey);
+    border-radius: 0px 5px 5px 5px;
+    opacity: 1;
+    padding: 3px 3px;
+    width: max-content;
+}
+button.pyrope.ifield span.show span {
+    display: block;
+    padding: 0px 10px;
+}
+
+/* Last paragraph does not need margin so that the preamble is vertically
+centered between its separators. */
+div.pyrope div[data-mime-type="text/markdown"] p:last-of-type {
+    margin: 0px;
+}
+
+span.pyrope.field div, pre {
+    display: inline !important;
+    padding: 0px !important;
+    background-color: inherit !important;
+    font-family: var(--jp-ui-font-family) !important;
+}
+
+div.pyrope.debug > div:first-child {
+    border: 1px solid var(--grey);
+    border-radius: 5px;
+}
+div.pyrope.debug > div:first-child > div.lm-Widget.widget-output {
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Checkbox widget. */
+input[type="checkbox"].pyrope {
+	-webkit-appearance: none;
+    border: 1px solid var(--grey);
+    width: 13px;
+    height: 13px;
+    border-radius: 2px;
+    vertical-align: middle;
+}
+input[type="checkbox"].pyrope:focus {
+    outline: none;
+}
+input[type="checkbox"].pyrope:hover:enabled {
+	box-shadow: 0px 0px 1px var(--black);
+}
+input[type="checkbox"].pyrope:checked::before {
+	content: "";
+    display: block;
+    width: 2px;
+    height: 4px;
+    background-color: var(--black);
+    transform: translateX(2px) translateY(6px) rotate(-50deg);
+}
+input[type="checkbox"].pyrope:checked::after {
+	content: "";
+    display: block;
+    width: 2px;
+    height: 8px;
+    background-color: var(--black);
+    transform: translateX(6px) translateY(-3px) rotate(38deg);
+}
+input[type="checkbox"].pyrope.invalid:checked::before {
+	background-color: var(--red);
+}
+input[type="checkbox"].pyrope.invalid:checked::after {
+	background-color: var(--red);
+}
+input[type="checkbox"].pyrope.invalid {
+	border-color: var(--red);
+    background-color: var(--light-red);
+}
+input[type="checkbox"].pyrope.valid:disabled {
+	border-color: var(--blue);
+    background-color: var(--light-blue);
+}
+input[type="checkbox"].pyrope.valid:disabled::before {
+	background-color: var(--blue);
+}
+input[type="checkbox"].pyrope.valid:disabled::after {
+	background-color: var(--blue);
+}
+
+/* RadioButtons widget. */
+input[type="radio"].pyrope {
+	-webkit-appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 1px solid var(--grey);
+    border-radius: 50%;
+    vertical-align: text-bottom;
+}
+input[type="radio"].pyrope:focus {
+    outline: none;
+}
+input[type="radio"].pyrope:checked {
+	background-image: radial-gradient(
+    	circle,
+        var(--black) 0%,
+        var(--black) 40%,
+        transparent 50%,
+        transparent 100%
+	);
+}
+input[type="radio"].pyrope:hover:enabled {
+	box-shadow: 0px 0px 1px var(--black);
+}
+input[type="radio"].pyrope.invalid {
+	border-color: var(--red);
+    background-color: var(--light-red);
+}
+input[type="radio"].pyrope.invalid:checked {
+	background-image: radial-gradient(
+    	circle,
+        var(--red) 0%,
+        var(--red) 40%,
+        transparent 50%,
+        transparent 100%
+	);
+}
+input[type="radio"].pyrope.valid:disabled {
+	border-color: var(--blue);
+    background-color: var(--light-blue);
+}
+input[type="radio"].pyrope.valid:disabled:checked {
+	background-image: radial-gradient(
+    	circle,
+        var(--blue) 0%,
+        var(--blue) 40%,
+        transparent 50%,
+        transparent 100%
+	);
+}
+
+/* Slider widget. */
+input[type="range"].pyrope {
+    -webkit-appearance: none;
+    background-color: var(--light-grey);
+    height: 5px;
+    border-radius: 10px;
+    border: 1px solid var(--grey);
+    width: 25%;
+    vertical-align: middle;
+    display: inline;
+}
+input[type="range"].pyrope::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: var(--black);
+    border-radius: 50%;
+    cursor: pointer;
+    height: var(--slider-thumb-size);
+    width: var(--slider-thumb-size);
+}
+input[type="range"].pyrope.invalid {
+	border-color: var(--red);
+    background-color: var(--light-red);
+}
+input[type="range"].pyrope.invalid::-webkit-slider-thumb {
+	background: var(--red);
+}
+input[type="range"].pyrope.valid:disabled {
+	border-color: var(--blue);
+    background-color: var(--light-blue);
+}
+input[type="range"].pyrope.valid:disabled::-webkit-slider-thumb {
+	background: var(--blue);
+}
+input[type="range"].pyrope::-moz-range-thumb {
+    -webkit-appearance: none;
+    background: var(--black);
+    border-width: 0px;
+    border-radius: 50%;
+    cursor: pointer;
+    height: var(--slider-thumb-size);
+    width: var(--slider-thumb-size);
+}
+input[type="range"].pyrope.valid:disabled::-moz-range-thumb {
+	background: var(--blue);
+}
+input[type="range"].pyrope.invalid::-moz-range-thumb {
+	background: var(--red);
+}
+div.pyrope.slider-container {
+    position: relative;
+}
+span.pyrope.field div.pyrope.slider-info {
+    visibility: collapse;
+    position: absolute;
+    bottom: 14px;
+    border: 1px solid var(--grey);
+    border-radius: 2px;
+    background-color: var(--light-grey) !important;
+    min-width: 25px;
+    text-align: center;
+    z-index: 2;
+    padding: 1px 3px !important;
+}
+span.pyrope.field div.pyrope.slider-info.show {
+    visibility: visible;
+}
+
+/* Text widget. */
+input[type="text"].pyrope {
+	border: 1px solid var(--grey);
+    border-radius: 2px;
+    padding: 2px;
+    vertical-align: middle;
+}
+input[type="text"].pyrope:focus {
+	border-color: var(--black);
+	outline-color: var(--black);
+	outline-style: solid;
+}
+input[type="text"].pyrope.invalid {
+    border-color: var(--red);
+    color: var(--red);
+}
+input[type="text"].pyrope.invalid:focus {
+    outline-color: var(--red);
+}
+input[type="text"].pyrope.invalid:disabled {
+	background-color: var(--light-red);
+}
+input[type="text"].pyrope.valid {
+    border-color: var(--blue);
+}
+input[type="text"].pyrope.valid:focus {
+    outline-color: var(--blue);
+}
+input[type="text"].pyrope.valid:disabled {
+	color: var(--blue);
+    background-color: var(--light-blue);
+}
+
+/* TextArea widget. */
+textarea.pyrope {
+	border: 1px solid var(--grey);
+    border-radius: 2px;
+    padding: 2px;
+    vertical-align: middle;
+}
+textarea.pyrope:focus {
+	outline-style: solid;
+    outline-color: var(--black);
+    border-color: var(--black);
+}
+textarea.pyrope.invalid {
+    border-color: var(--red);
+    color: var(--red);
+}
+textarea.pyrope.invalid:focus {
+    outline-color: var(--red);
+}
+textarea.pyrope.invalid:disabled {
+	background-color: var(--light-red);
+}
+textarea.pyrope.valid {
+    border-color: var(--blue);
+}
+textarea.pyrope.valid:focus {
+    outline-color: var(--blue);
+}
+textarea.pyrope.valid:disabled {
+	color: var(--blue);
+    background-color: var(--light-blue);
+}
