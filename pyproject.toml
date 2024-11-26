@@ -11,6 +11,7 @@ name = "pyrope_ipywidgets"
 requires-python = ">=3.10"
 dependencies = [
     "ipywidgets>=8.0.0",
+    "pyrope @ git+https://github.com/PyRope-E-Assessment/pyrope.git@0.1.X-notebook7",
 ]
 version = "0.1.0"
 
