@@ -157,6 +157,7 @@ class Exercise(PyRopeIPyWidget):
     @default('hint_btn')
     def default_hint_btn(self):
         btn = HintButton()
+
         def display_hint(btn):
             hint = HTMLTemplateFormatter.format(
                 btn.get_next_hint(), **self.ofields
@@ -375,7 +376,6 @@ class Slider(InputWidget):
             )
         return step
 
-
     @validate('value')
     def validate_value(self, proposal):
         value = proposal['value']
@@ -439,5 +439,3 @@ class TextArea(Text):
     @default('width')
     def default_width(self):
         return 50
-
-
