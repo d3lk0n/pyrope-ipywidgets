@@ -107,7 +107,7 @@ export class ExerciseView extends PyRopeWidgetView {
     protected _feedback: HTMLDivElement;
     protected _feedback_separator: HTMLHRElement;
     protected _hints: HTMLDivElement;
-    protected _ofield_models: Map<string, IRenderMime.IMimeModel> = new Map();
+    protected _ofield_models: Map<string, IRenderMime.IMimeModel>;
     protected _preamble: HTMLDivElement;
     protected _preamble_separator: HTMLHRElement;
     protected _problem: HTMLDivElement;
@@ -208,6 +208,7 @@ export class ExerciseView extends PyRopeWidgetView {
     }
 
     create_ofield_models() {
+        this._ofield_models = new Map();
         let mime_types = this.model.get('_ofield_mime_bundles');
         for(let name in mime_types) {
             let format_dict = mime_types[name][0]
@@ -341,13 +342,13 @@ export class ExerciseView extends PyRopeWidgetView {
     render_hints() {
         const hints = this.model.get('_displayed_hints');
         this._hints.replaceChildren();
-        for (let i in hints) {
+        for (let hint of hints) {
             const hint_container = this.create_alert_box('info');
             hint_container.classList.add('show');
             this._hints.append(hint_container);
             if (hint_container.lastChild !== null) {
                 this.render_ofields(
-                    hints[i], hint_container.lastChild as HTMLSpanElement
+                    hint, hint_container.lastChild as HTMLSpanElement
                 );
             }
         }
