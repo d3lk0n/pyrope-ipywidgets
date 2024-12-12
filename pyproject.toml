@@ -54,3 +54,6 @@ dependencies = [
 path = "."
 build_cmd = "build:prod"
 npm = ["jlpm"]
+
+[tool.pylint.'MESSAGES CONTROL']
+errors-only = "True"
