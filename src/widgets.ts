@@ -588,6 +588,115 @@ export class CheckboxView extends InputWidgetView {
 }
 
 
+export class RadioButtonsModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+
+            _model_name: RadioButtonsModel.model_name,
+            _view_name: RadioButtonsModel.view_name,
+
+            _index: null,
+
+            labels: [],
+            vertical: true,
+        }
+    }
+
+    static model_name = 'RadioButtonsModel';
+    static view_name = 'RadioButtonsView';
+}
+
+
+export class RadioButtonsView extends InputWidgetView {
+
+    protected _container: HTMLDivElement;
+    protected _radio_buttons: Array<HTMLInputElement>;
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:_index', this.change_index, this);
+        this.model.on('change:labels', this.change_labels, this);
+        this.model.on('change:vertical', this.change_labels, this);
+    }
+
+    render() {
+        this.displayed.then(() => this._render());
+    }
+
+    _render() {
+        this._container = document.createElement('div');
+        this._container.classList.add('pyrope');
+        this.el.append(this._container);
+
+        this.change_index();
+        this.change_labels();
+
+        super.render();
+    }
+
+    change_disabled() {
+        this._radio_buttons.forEach((btn: HTMLInputElement) => {
+            this.change_class_name(btn);
+        });
+    }
+
+    change_index() {
+        const i = this.model.get('_index');
+        if (i !== null) {
+            this._radio_buttons[i].checked = true;
+        }
+    }
+
+    change_labels() {
+        this._radio_buttons = new Array();
+        this._container.replaceChildren();
+        const vertical = this.model.get('vertical');
+        if (vertical) {
+            this.el.classList.add('pyrope-vertical-radio-buttons');
+        } else {
+            this.el.classList.remove('pyrope-vertical-radio-buttons');
+        }
+        const labels = this.model.get('labels');
+        labels.forEach(async (element: string) => {
+            const radio_button = document.createElement('input');
+            radio_button.type = 'radio';
+            radio_button.classList.add('pyrope');
+            radio_button.name = this.cid;
+            radio_button.addEventListener('change', () => {
+                this.change_on_change(this, radio_button)
+            });
+            this._radio_buttons.push(radio_button);
+            const label = document.createElement('label');
+            label.classList.add('pyrope');
+            this._container.append(radio_button, label);
+            if (vertical) {
+                this._container.append(document.createElement('br'));
+            }
+            const label_model = PyRopeWidgetView.renderMimeRegistry.createModel(
+                {'data': {'text/markdown': element}}
+            );
+            await this.render_model(label_model, label);
+        });
+    }
+
+    change_on_change(view: RadioButtonsView, radio_button: HTMLInputElement) {
+        view.model.set('_index', this._radio_buttons.indexOf(radio_button));
+        view.model.save_changes();
+    }
+
+    change_title() {
+        this._container.title = this.model.get('title');
+    }
+
+    change_valid() {
+        this._radio_buttons.forEach((btn: HTMLInputElement) => {
+            this.change_class_name(btn);
+        });
+    }
+}
+
+
 export class SliderModel extends InputWidgetModel {
     defaults() {
         return {

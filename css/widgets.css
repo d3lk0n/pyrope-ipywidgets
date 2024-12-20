@@ -134,7 +134,7 @@ div.pyrope div[data-mime-type="text/markdown"] p:last-of-type {
 }
 
 span.pyrope.field div, pre {
-    display: inline !important;
+    display: inline;
     padding: 0px !important;
     background-color: inherit !important;
     font-family: var(--jp-ui-font-family) !important;
@@ -251,6 +251,14 @@ input[type="radio"].pyrope.valid:disabled:checked {
         transparent 50%,
         transparent 100%
 	);
+}
+input[type="radio"].pyrope + label.pyrope {
+    display: inline-block;
+    padding-right: 5px;
+}
+div.lm-Widget.pyrope-vertical-radio-buttons {
+    display: inline-flex !important;
+    align-items: center;
 }
 
 /* Slider widget. */

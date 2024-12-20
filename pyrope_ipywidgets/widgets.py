@@ -334,6 +334,28 @@ class Checkbox(InputWidget):
         return False
 
 
+class RadioButtons(InputWidget):
+
+    _model_name = Unicode('RadioButtonsModel').tag(sync=True)
+    _view_name = Unicode('RadioButtonsView').tag(sync=True)
+
+    _index = Int(None, allow_none=True).tag(sync=True)
+
+    labels = Tuple(()).tag(sync=True)
+    options = Tuple(()).tag(sync=False)
+    value = Any(None).tag(sync=False)
+    vertical = Bool(True).tag(sync=True)
+
+    @observe('_index')
+    def observe_index(self, change):
+        self.value = self.options[change['new']]
+
+    @observe('value')
+    def observe_value(self, change):
+        self._index = self.options.index(change['new'])
+        super().observe_value(change)
+
+
 class Slider(InputWidget):
 
     _model_name = Unicode('SliderModel').tag(sync=True)
