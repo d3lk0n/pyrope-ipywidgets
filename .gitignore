@@ -61,8 +61,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
-docs/source/_static/embed-bundle.js
-docs/source/_static/embed-bundle.js.map
+docs/source/_static/
 
 # PyBuilder
 target/
@@ -159,3 +158,6 @@ pyrope_ipywidgets/nbextension/index.*
 
 # Packed lab extensions
 pyrope_ipywidgets/labextension
+
+# Notebook extensions
+pyrope_ipywidgets/nbextension
