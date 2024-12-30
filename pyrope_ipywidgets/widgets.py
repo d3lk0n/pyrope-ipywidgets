@@ -3,7 +3,7 @@ from fractions import Fraction
 
 from IPython import get_ipython
 from ipywidgets import Button, DOMWidget, Output, widget_serialization
-from pyrope.messages import ChangeWidgetAttribute, Submit
+from pyrope_ipywidgets.messages_pyrope import ChangeWidgetAttribute, Submit
 from traitlets import (
     Any, Bool, default, Dict, Enum, Float, Instance, Int, List, observe, Tuple,
     TraitError, Unicode, validate
