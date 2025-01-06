@@ -25,15 +25,19 @@ export class PyRopeWidgetModel extends DOMWidgetModel {
 
             _model_module: PyRopeWidgetModel.model_module,
             _model_module_version: PyRopeWidgetModel.model_module_version,
+            _model_name: PyRopeWidgetModel.model_name,
             _view_module: PyRopeWidgetModel.view_module,
             _view_module_version: PyRopeWidgetModel.view_module_version,
+            _view_name: PyRopeWidgetModel.view_name,
         }
     }
 
     static model_module = MODULE_NAME;
     static model_module_version = MODULE_VERSION;
+    static model_name = 'PyRopeWidgetModel';
     static view_module = MODULE_NAME;
     static view_module_version = MODULE_VERSION;
+    static view_name = 'PyRopeWidgetView';
 }
 
 
@@ -64,9 +68,6 @@ export class ExerciseModel extends PyRopeWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
-
-            _model_name: ExerciseModel.model_name,
-            _view_name: ExerciseModel.view_name,
 
             _displayed_hints: [],
             _feedback: '',
@@ -386,9 +387,6 @@ export class InputWidgetModel extends PyRopeWidgetModel {
         return {
             ...super.defaults(),
 
-            _model_name: InputWidgetModel.model_name,
-            _view_name: InputWidgetModel.view_name,
-
             _score: '',
             _solution_mime_bundle: [],
 
@@ -540,9 +538,6 @@ export class CheckboxModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
-            _model_name: CheckboxModel.model_name,
-            _view_name: CheckboxModel.view_name,
-
             value: false,
         }
     }
@@ -592,9 +587,6 @@ export class RadioButtonsModel extends InputWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
-
-            _model_name: RadioButtonsModel.model_name,
-            _view_name: RadioButtonsModel.view_name,
 
             _index: null,
 
@@ -701,9 +693,6 @@ export class SliderModel extends InputWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
-
-            _model_name: SliderModel.model_name,
-            _view_name: SliderModel.view_name,
 
             maximum: 100.0,
             minimum: 0.0,
@@ -829,9 +818,6 @@ export class TextModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
-            _model_name: TextModel.model_name,
-            _view_name: TextModel.view_name,
-
             placeholder: '',
             value: '',
             width: 20,
@@ -904,9 +890,6 @@ export class TextAreaModel extends TextModel {
     defaults() {
         return {
             ...super.defaults(),
-
-            _model_name: TextAreaModel.model_name,
-            _view_name: TextAreaModel.view_name,
 
             height: 4,
             width: 50,

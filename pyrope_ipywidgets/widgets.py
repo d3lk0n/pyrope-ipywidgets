@@ -81,12 +81,14 @@ class HintButton(Button):
         return hint
 
 
-class PyRopeIPyWidget(DOMWidget):
+class PyRopeWidget(DOMWidget):
 
     _model_module = Unicode(module_name).tag(sync=True)
     _model_module_version = Unicode(module_version).tag(sync=True)
+    _model_name = Unicode('PyRopeWidgetModel').tag(sync=True)
     _view_module = Unicode(module_name).tag(sync=True)
     _view_module_version = Unicode(module_version).tag(sync=True)
+    _view_name = Unicode('PyRopeWidgetView').tag(sync=True)
 
     def __init__(self, notification_callback, **kwargs):
         super().__init__(**kwargs)
@@ -107,7 +109,7 @@ class PyRopeIPyWidget(DOMWidget):
         return bundle
 
 
-class Exercise(PyRopeIPyWidget):
+class Exercise(PyRopeWidget):
 
     _model_name = Unicode('ExerciseModel').tag(sync=True)
     _view_name = Unicode('ExerciseView').tag(sync=True)
@@ -254,7 +256,10 @@ class Exercise(PyRopeIPyWidget):
         self.display_total_score()
 
 
-class InputWidget(PyRopeIPyWidget):
+class InputWidget(PyRopeWidget):
+
+    _model_name = Unicode('InputWidgetModel').tag(sync=True)
+    _view_name = Unicode('InputWidgetView').tag(sync=True)
 
     _score = Unicode('').tag(sync=True)
     _solution_mime_bundle = Tuple(()).tag(sync=True)
