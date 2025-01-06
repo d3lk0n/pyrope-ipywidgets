@@ -372,6 +372,10 @@ class Slider(InputWidget):
     value = Float(0.0).tag(sync=True)
     width = Int(25).tag(sync=True)
 
+    @property
+    def is_empty(self):
+        return False
+
     @validate('maximum')
     def validate_maximum(self, proposal):
         maximum = proposal['value']
