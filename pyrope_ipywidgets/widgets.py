@@ -1,6 +1,4 @@
 
-from fractions import Fraction
-
 from IPython import get_ipython
 from ipywidgets import Button, DOMWidget, Output, widget_serialization
 from pyrope.messages import ChangeWidgetAttribute, Submit
@@ -376,60 +374,9 @@ class Slider(InputWidget):
     def is_empty(self):
         return False
 
-    @validate('maximum')
-    def validate_maximum(self, proposal):
-        maximum = proposal['value']
-        if self.minimum > maximum:
-            raise TraitError(
-                "'maximum' has to be greater or equal to 'minimum'."
-            )
-        return maximum
-
     @observe('minimum')
     def observe_minimum(self, change):
         self.value = change['new']
-
-    @validate('minimum')
-    def validate_minimum(self, proposal):
-        minimum = proposal['value']
-        if minimum > self.maximum:
-            raise TraitError(
-                "'minimum' has to be less or equal to 'maximum'."
-            )
-        return minimum
-
-    @validate('step')
-    def validate_step(self, proposal):
-        step = proposal['value']
-        if step <= 0.0:
-            raise TraitError(
-                "'step' has to be a positive real number."
-            )
-        return step
-
-    @validate('value')
-    def validate_value(self, proposal):
-        value = proposal['value']
-        if not self.minimum <= value <= self.maximum:
-            raise TraitError(
-                f"'value' has to be a number of the interval "
-                f"[{self.minimum}, {self.maximum}]."
-            )
-        if Fraction(str(value - self.minimum)) % Fraction(str(self.step)) != 0:
-            raise TraitError(
-                f"A value of {value} is not attainable with a minimum of "
-                f"{self.minimum} and a step width of {self.step}."
-            )
-        return value
-
-    @validate('width')
-    def validate_width(self, proposal):
-        width = proposal['value']
-        if not 0 <= width <= 100:
-            raise TraitError(
-                "'width' has to be a number of the interval [0, 100]."
-            )
-        return width
 
 
 class Text(InputWidget):
@@ -441,15 +388,6 @@ class Text(InputWidget):
     value = Unicode('').tag(sync=True)
     width = Int(20).tag(sync=True)
 
-    @validate('width')
-    def validate_width(self, proposal):
-        width = proposal['value']
-        if width < 0:
-            raise TraitError(
-                "'width' should be greater than or equal to zero."
-            )
-        return width
-
 
 class TextArea(Text):
 
@@ -457,16 +395,4 @@ class TextArea(Text):
     _view_name = Unicode('TextAreaView').tag(sync=True)
 
     height = Int(4).tag(sync=True)
-
-    @validate('height')
-    def validate_height(self, proposal):
-        height = proposal['value']
-        if height < 0:
-            raise TraitError(
-                "'height' should be greater than or equal to zero."
-            )
-        return height
-
-    @default('width')
-    def default_width(self):
-        return 50
+    width = Int(50).tag(sync=True)
