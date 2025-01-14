@@ -1,12 +1,13 @@
 
 from pyrope_ipywidgets.widgets import (
-    Checkbox, Exercise, RadioButtons, Slider, Text, TextArea
+    Checkbox, Dropdown, Exercise, RadioButtons, Slider, Text, TextArea
 )
 from pyrope_ipywidgets._version import __version__, version_info
 
 __all__ = [
     '__version__',
     'Checkbox',
+    'Dropdown',
     'Exercise',
     'RadioButtons',
     'Slider',

@@ -583,6 +583,84 @@ export class CheckboxView extends InputWidgetView {
 }
 
 
+export class DropdownModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+
+            _index: null,
+
+            labels: [],
+        }
+    }
+
+    static model_name = 'DropdownModel';
+    static view_name = 'DropdownView';
+}
+
+
+export class DropdownView extends InputWidgetView {
+
+    protected _select: HTMLSelectElement;
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:_index', this.change_index, this);
+        this.model.on('change:labels', this.change_labels, this);
+    }
+
+    render() {
+        this._select = document.createElement('select');
+        this._select.onchange = this.change_on_change.bind(this);
+        this.el.append(this._select);
+
+        this.change_labels();
+        this.change_index();
+
+        super.render();
+    }
+
+    change_disabled() {
+        this.change_class_name(this._select);
+    }
+
+    change_index() {
+        const i = this.model.get('_index');
+        if (i !== null) {
+            this._select.options[i + 1].selected = true;
+        }
+    }
+
+    change_labels() {
+        this._select.replaceChildren();
+        const default_option = document.createElement('option');
+        default_option.disabled = true;
+        default_option.hidden = true;
+        default_option.selected = true;
+        this._select.append(default_option);
+        const labels = this.model.get('labels');
+        labels.forEach((element: string) => {
+            const option = document.createElement('option');
+            option.textContent = element;
+            this._select.append(option);
+        });
+    }
+
+    change_on_change() {
+        this.model.set('_index', this._select.selectedIndex - 1);
+        this.model.save_changes();
+    }
+
+    change_title() {
+        this._select.title = this.model.get('title');
+    }
+
+    change_valid() {
+        this.change_class_name(this._select);
+    }
+}
+
+
 export class RadioButtonsModel extends InputWidgetModel {
     defaults() {
         return {

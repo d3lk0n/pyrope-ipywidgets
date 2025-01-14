@@ -202,6 +202,28 @@ input[type="checkbox"].pyrope.valid:disabled::after {
 	background-color: var(--blue);
 }
 
+/* Dropdown widget. */
+select.pyrope {
+	border: 1px solid var(--grey);
+    border-radius: 2px;
+}
+select.pyrope.invalid {
+	color: var(--red);
+    border-color: var(--red);
+    background-color: var(--light-red);
+}
+select.pyrope.invalid option {
+	color: black;
+}
+select.pyrope.invalid:focus {
+    outline-color: var(--red);
+}
+select.pyrope.valid:disabled {
+	color: var(--blue);
+    border-color: var(--blue);
+    background-color: var(--light-blue);
+}
+
 /* RadioButtons widget. */
 input[type="radio"].pyrope {
 	-webkit-appearance: none;
