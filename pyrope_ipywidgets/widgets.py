@@ -22,8 +22,7 @@ class DebugOutput(Output):
         self.init_output()
 
     def init_output(self):
-        with self:
-            print('Debug Messages:')
+        self.append_stdout('Debug Messages:\n')
 
 
 class SubmitButton(Button):
