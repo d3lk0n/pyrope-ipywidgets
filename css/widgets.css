@@ -127,6 +127,11 @@ button.pyrope.ifield span.show span {
     padding: 0px 10px;
 }
 
+/* GraphicalHotspot widget. TODO move everything here*/
+input[type="graphical"].pyrope {
+	border: 1px solid var(--grey);
+}
+
 /* Last paragraph does not need margin so that the preamble is vertically
 centered between its separators. */
 div.pyrope div[data-mime-type="text/markdown"] p:last-of-type {

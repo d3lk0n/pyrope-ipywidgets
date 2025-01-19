@@ -461,3 +461,17 @@ class TextArea(Text):
     @default('width')
     def default_width(self):
         return 50
+
+#TODO
+#general class for graphical interactions?
+class GraphicalHotspot(InputWidget):
+    
+    _model_name = Unicode('GraphicalHotspotModel').tag(sync=True)
+    _view_name = Unicode('GraphicalHotspotView').tag(sync=True)
+    
+    #TODO sync might be unnecassary
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)

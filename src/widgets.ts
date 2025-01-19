@@ -940,3 +940,177 @@ export class TextAreaView extends TextView {
         this._text.rows = this.model.get('height');
     }
 }
+
+
+//if necessary
+//TODO create general Graphical Model/View
+//TODO create general File (Background) Model/View  
+
+export class GraphicalHotspotModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            //TODO NEXT see Slider how value is saved (thats used in solution)
+            //same here, change value on toggles
+
+            _model_name: GraphicalHotspotModel.model_name,
+            _view_name: GraphicalHotspotModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO default icon
+            //TODO resize icon with bg?
+            icon_src: '',
+            
+            //coords by x,y,required
+            all_coords: [] as string[],
+
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalHotspotModel';
+    static view_name = 'GraphicalHotspotView';
+}
+
+
+export class GraphicalHotspotView extends InputWidgetView {
+
+    //TODO dollar sign?
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+        this.model.on('change:icon_src', this.change_icon_src, this);
+    }
+    render() {
+
+        this.container = document.createElement('div');
+        
+        //TODO move to .css
+        this.container.style.display = 'inline-block'
+        this.container.style.position = 'relative';
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        
+        this.container.classList.add('pyrope');
+        
+        this.change_background_src();
+        this.change_icon_src();
+        
+        //alternative for determining url
+        /*this.model.widget_manager.resolveUrl(this.model.get('background_src')).then(resolvedUrl => {
+            console.log('Typescript BG URL: \n')
+            console.log(resolvedUrl)
+            //this.background.src = resolvedUrl;
+        });*/
+
+        this.el.append(this.container);
+
+        console.log('Children:')
+        console.log(this.el.children)
+        console.log(this.container)
+
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `100%`;
+        this.background.style.width = `100%`;
+        
+        
+        this.background.style.display = 'inline'
+        this.background.style.border='1px solid black';
+        this.background.style.position='absolute';
+        this.background.style.zIndex='1';
+        this.background.classList.add('pyrope');        
+
+        this.container.append(this.background)
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords)
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords)
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        //TODO extra modification for reshaping icons (e.g. circles)
+        icon.style.zIndex='2';
+        icon.style.display = 'inline'
+        icon.style.position='absolute';
+        
+        //TODO use given coords as center
+        //TODO would require not being able to place image near edges (test case in python) 
+        const [x ,y] = coords.split(',');
+        console.log('Creating Icon for coords: ' + x + ' ' + y)
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+        icon.style.opacity = '40%'
+
+        //TODO if needed
+        //coord_element.style.borderRadius = '50%'
+        icon.classList.add('pyrope');
+
+        icon.onclick = this.change_on_clicked.bind(this, icon)
+
+        this.container.append(icon)
+    }
+
+    change_on_clicked(icon : HTMLImageElement) {
+
+        const x = icon.style.left.replace('px', '')
+        const y = icon.style.top.replace('px', '')
+
+        const coords = `${x},${y}`
+        const current_coords = this.model.get('value') as string[]
+        const index = current_coords.indexOf(coords)
+        if (index >= 0) {
+            //icon was already clicked, remove from tracked list and reset opacity 
+            icon.style.opacity = '40%'
+            //TODO only for debugging for now
+            console.log(`Before: ${this.model.get('value')}`)
+            console.log(`${coords} will be removed from tracked`)
+            current_coords.splice(index, 1)
+            this.model.set('value', current_coords)
+            this.model.save_changes()
+            console.log(`After: ${this.model.get('value')}`)
+        } else {
+            //icon not tracked yet, add to tracked list and set full opacity 
+            icon.style.opacity = '100%'
+            console.log(`Before: ${this.model.get('value')}`)
+            console.log(`${coords} will be added to tracked`)
+            current_coords.push(coords)
+            this.model.set('value', current_coords)
+            this.model.save_changes()
+            console.log(`After: ${this.model.get('value')}`)            
+        }
+       
+    }
+
+    //TODO test
+    change_valid() {
+        this.change_class_name(this.background);
+    }
+    
+    //TODO validate method?
+
+    
+
+}
+
