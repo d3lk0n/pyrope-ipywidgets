@@ -120,7 +120,7 @@ export class ExerciseView extends PyRopeWidgetView {
     // Container for the output widget to show debug messages.
     protected _debug_area: HTMLDivElement;
 
-    // Horizontal line to separater the debug area.
+    // Horizontal line to separator the debug area.
     protected _debug_area_separator: HTMLHRElement;
 
     // Container for rendering the feedback.
