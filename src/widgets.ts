@@ -18,6 +18,7 @@ import '../css/widgets.css';
 import { MODULE_NAME, MODULE_VERSION } from './version';
 
 
+// Base model class for all PyRope widget models.
 export class PyRopeWidgetModel extends DOMWidgetModel {
     defaults() {
         return {
@@ -41,8 +42,12 @@ export class PyRopeWidgetModel extends DOMWidgetModel {
 }
 
 
+// Base view class for all PyRope widget views.
 export class PyRopeWidgetView extends DOMWidgetView {
 
+    // This render mime registry is set when the extension gets loaded. The
+    // registry is based on Jupyter's default registry and is used to render
+    // Markdown, LaTeX and Python objects.
     static renderMimeRegistry: IRenderMimeRegistry;
 
     constructor(...args: any[]) {
@@ -50,8 +55,13 @@ export class PyRopeWidgetView extends DOMWidgetView {
         this.init_callbacks();
     }
 
+    // Callbacks can be initialized in this method for readability purposes, so
+    // that they do not have to be initialized in the render methode.
     init_callbacks() {}
 
+    // Render a mime model with the render mime registry inside a host element.
+    // The host element needs to be attached to the DOM tree, otherwise the
+    // model cannot be attached to the host.
     async render_model(model: IRenderMime.IMimeModel, host: HTMLElement) {
         const registry = PyRopeWidgetView.renderMimeRegistry;
         const mime_type = registry.preferredMimeType(model.data);
@@ -64,6 +74,7 @@ export class PyRopeWidgetView extends DOMWidgetView {
 }
 
 
+// Model class for PyRope's exercises.
 export class ExerciseModel extends PyRopeWidgetModel {
     defaults() {
         return {
@@ -100,19 +111,45 @@ export class ExerciseModel extends PyRopeWidgetModel {
 }
 
 
+// View class for PyRope's exercises.
 export class ExerciseView extends PyRopeWidgetView {
 
+    // Container for all buttons of an exercise.
     protected _button_area: HTMLDivElement;
+
+    // Container for the output widget to show debug messages.
     protected _debug_area: HTMLDivElement;
+
+    // Horizontal line to separater the debug area.
     protected _debug_area_separator: HTMLHRElement;
+
+    // Container for rendering the feedback.
     protected _feedback: HTMLDivElement;
+
+    // Horizontal line to separate the feedback.
     protected _feedback_separator: HTMLHRElement;
+
+    // Container for rendering hints.
     protected _hints: HTMLDivElement;
+
+    // A map which keys are ofield names and values are the corresponding
+    // mime model to render them.
     protected _ofield_models: Map<string, IRenderMime.IMimeModel>;
+
+    // Container for rendering the preamble.
     protected _preamble: HTMLDivElement;
+
+    // Horizontal line to separate the preamble.
     protected _preamble_separator: HTMLHRElement;
+
+    // Container for rendering the problem.
     protected _problem: HTMLDivElement;
+
+    // Container for rendering the total score.
     protected _total_score_container: HTMLDivElement;
+
+    // Container for rendering warning messages, i.e. if there are empty and/or
+    // invalid input fields).
     protected _warning: HTMLDivElement;
 
     init_callbacks() {
@@ -134,6 +171,10 @@ export class ExerciseView extends PyRopeWidgetView {
         }, this);
     }
 
+    // Since models can only be rendered if the host element is attached to
+    // the DOM tree (see PyRopeWidgetView.render_model), the _render method is
+    // executed after the container element of an exercise (this.el) was
+    // attached.
     render() {
         this.displayed.then(() => this._render());
     }
@@ -142,24 +183,37 @@ export class ExerciseView extends PyRopeWidgetView {
         this._preamble = document.createElement('div');
         this._preamble.classList.add('pyrope', 'preamble');
         this._preamble_separator = this.new_separator();
+        // Only show a separator after the preamble if there actually is a
+        // preamble.
         this._preamble_separator.classList.add('hide');
+
         this._problem = document.createElement('div');
         this._problem.classList.add('pyrope', 'problem');
+
         this._button_area = document.createElement('div');
         this._button_area.classList.add('pyrope', 'button-area');
+
         this._warning = this.create_alert_box('warning');
+
         this._hints = document.createElement('div');
         this._hints.classList.add('pyrope', 'hints');
+
         this._feedback = document.createElement('div');
         this._feedback.classList.add('pyrope', 'feedback');
-        this._total_score_container = this.create_alert_box('info');
         this._feedback_separator = this.new_separator();
+        // Only show a separator after the feedback if there actually is
+        // feedback.
         this._feedback_separator.classList.add('hide');
+
+        this._total_score_container = this.create_alert_box('info');
+
         this._debug_area = document.createElement('div');
         this._debug_area.classList.add('pyrope', 'debug');
         this._debug_area_separator = this.new_separator();
+        // Only show a separator after the debug area if the debug mode is on.
         this._debug_area_separator.classList.add('hide');
 
+        // Append all elements to the host element of this view.
         this.el.append(
             this.new_separator(), this._preamble, this._preamble_separator,
             this._problem, this._button_area, this._warning, this._hints,
@@ -168,6 +222,7 @@ export class ExerciseView extends PyRopeWidgetView {
             this._debug_area_separator
         );
 
+        // Call the rendering methods.
         this.create_ofield_models();
         this.render_preamble();
         this.render_problem();
@@ -178,14 +233,20 @@ export class ExerciseView extends PyRopeWidgetView {
         this.render_alert_box(
             this._total_score_container, this.model.get('_total_score')
         );
-        this.render_debug_output();
+        this.render_debug_area();
     }
 
+    // If the debug mode changes, the buttons and the debug area need to be
+    // rerendered.
     change_debug() {
         this.populate_button_area();
-        this.render_debug_output();
+        this.render_debug_area();
     }
 
+    // Return a styled div element depending on the given type. Valid types
+    // are info and warning. Raises an error for invalid types. The returned
+    // container contains an icon which depends on the type and a span element
+    // to show text.
     create_alert_box(type: string) {
         const container = document.createElement('div');
         container.classList.add('pyrope', 'alert');
@@ -208,6 +269,9 @@ export class ExerciseView extends PyRopeWidgetView {
         return container;
     }
 
+    // Everytime the model's _ofield_mime_bundles attribute gets updated, this
+    // method converts all mime bundles to mime models with the help of the
+    // render mime registry.
     create_ofield_models() {
         this._ofield_models = new Map();
         let mime_types = this.model.get('_ofield_mime_bundles');
@@ -221,12 +285,16 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Return a styled hr element for separating specific sections of an
+    // exercise.
     new_separator() {
         let separator = document.createElement('hr');
         separator.classList.add('pyrope');
         return separator;
     }
 
+    // Render the preamble and only show a separator after the preamble if
+    // there actually is one.
     render_preamble() {
         const preamble_template = this.model.get('_preamble');
         this.render_ofields(preamble_template, this._preamble);
@@ -237,8 +305,14 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Render the buttons of an exercise inside the button area. Which buttons
+    // are shown, depends on the debug mode.
     async populate_button_area() {
+        // Clear the button area in case it was already rendered.
         this._button_area.replaceChildren();
+
+        // Create the submit and hint button and append them to the button
+        // container. These buttons are always rendered.
         const submit_btn_view = await this.create_widget_view(
             this.model.get('submit_btn')
         );
@@ -246,6 +320,9 @@ export class ExerciseView extends PyRopeWidgetView {
             this.model.get('hint_btn')
         );
         this._button_area.append(submit_btn_view.el, hint_btn_view.el);
+
+        // The button for clearing the debug messages is only shown if the
+        // debug mode is on.
         if (this.model.get('debug')) {
             const clear_debug_btn_view = await this.create_widget_view(
                 this.model.get('clear_debug_btn')
@@ -254,11 +331,18 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Render a map of mime or widget models with a given render function
+    // inside a given domain.
     render_models(
         models: Map<String, IRenderMime.IMimeModel | DOMWidgetModel>,
         render: (model: any, host: HTMLElement) => void, domain: HTMLElement
     ) {
         for(let [field_name, model] of models) {
+            // A model which key is called field_name is rendered inside all
+            // elements that have its field_name as value for the data
+            // attribute "data-pyrope-field-name". Notice that models are only
+            // rendered inside elements that are part of a given domain
+            // element.
             const elements = domain.querySelectorAll<HTMLElement>(
                 `[data-pyrope-field-name="${field_name}"]`
             );
@@ -268,8 +352,11 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Create and return a view for a given widget model.
     async create_widget_view(model: DOMWidgetModel) {
         const view = await model.widget_manager.create_view(model);
+        // The "displayed" event needs to be triggered manually to actually
+        // render a widget.
         view.trigger('displayed');
         return view;
     }
@@ -296,7 +383,7 @@ export class ExerciseView extends PyRopeWidgetView {
             const format_spec = model_host.getAttribute(
                 'data-pyrope-format-spec'
             );
-            if(format_spec === 'latex') {
+            if (format_spec === 'latex') {
                 model_host.replaceWith(String(model.data['text/plain']));
             }
         }, host);
@@ -314,14 +401,21 @@ export class ExerciseView extends PyRopeWidgetView {
         this.render_models(this._ofield_models, this.render_model, host);
     }
 
+    // Render the problem.
     async render_problem() {
+        // Get the problem template and render all output fields.
         const problem_template = this.model.get('_problem');
         await this.render_ofields(problem_template, this._problem);
+
+        // Create a widget map with widget ids as keys and widget models as
+        // values.
         const widgets = this.model.get('widgets');
         let widgets_map = new Map();
         for(let widget_id in widgets) {
             widgets_map.set(widget_id, widgets[widget_id]);
         }
+
+        // Render the widget models.
         this.render_models(widgets_map, async (widget_model, widget_host) => {
             widget_host.classList.add('pyrope', 'field', 'ifield');
             const view = await this.create_widget_view(widget_model);
@@ -329,10 +423,17 @@ export class ExerciseView extends PyRopeWidgetView {
         }, this._problem);
     }
 
+    // Render an alert box with a specific text. The host to be a container
+    // which is structured like containers returned by "create_alert_box"
+    // method. Furthermore the host needs to have the "alert" css class.
     render_alert_box(host: HTMLDivElement, text: string) {
+        // The last child refers to the span element of an alert box.
         if (host.lastChild !== null) {
             host.lastChild.textContent = text;
         }
+
+        // Hide the host container if the text string is empty and show it
+        // otherwise.
         if (text === '') {
             host.classList.remove('show');
         } else {
@@ -340,6 +441,8 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Render all hints which are stored inside the attribute _displayed_hints.
+    // Each hint is rendered inside an info alert box.
     render_hints() {
         const hints = this.model.get('_displayed_hints');
         this._hints.replaceChildren();
@@ -355,6 +458,8 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
+    // Render feedback and only show a separator after the feedback section if
+    // there actually is feedback.
     render_feedback() {
         const feedback_template = this.model.get('_feedback');
         this.render_ofields(feedback_template, this._feedback);
@@ -365,8 +470,13 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
-    async render_debug_output() {
+    // Render the debug area depending on the current debug mode.
+    async render_debug_area() {
+        // Clear the debug area in case it was already rendered.
         this._debug_area.replaceChildren();
+
+        // Render the debug output and show the separator if the debug mode is
+        // on and hide the separator otherwise.
         if (this.model.get('debug')) {
             const debug_output_view = await this.create_widget_view(
                 this.model.get('debug_output')
