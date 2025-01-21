@@ -553,7 +553,7 @@ export class InputWidgetView extends PyRopeWidgetView {
         this._tooltip.classList.add('pyrope');
         this._score_span = document.createElement('span');
         this._result_separator = document.createElement('hr');
-        this._result_separator.classList.add('pyrope', 'tooltip');
+        this._result_separator.classList.add('pyrope', 'tooltip', 'hide');
         this._solution_span = document.createElement('span');
         this._tooltip.append(
             this._solution_span, this._result_separator, this._score_span
@@ -586,9 +586,9 @@ export class InputWidgetView extends PyRopeWidgetView {
             score !== '' &&
             this.model.get('_solution_mime_bundle').length !== 0
         ) {
-            this._result_separator.style.display = 'block';
+            this._result_separator.classList.remove('hide');
         } else {
-            this._result_separator.style.display = 'none';
+            this._result_separator.classList.add('hide');
         }
         this._score_span.textContent = score;
     }
@@ -602,9 +602,9 @@ export class InputWidgetView extends PyRopeWidgetView {
             this._result_btn.disabled = false;
         }
         if (solution.length !== 0 && this.model.get('_score') !== '') {
-            this._result_separator.style.display = 'block';
+            this._result_separator.classList.remove('hide');
         } else {
-            this._result_separator.style.display = 'none';
+            this._result_separator.classList.add('hide');
         }
         if (solution.length === 0) { return }
         const model = PyRopeWidgetView.renderMimeRegistry.createModel(
