@@ -525,9 +525,9 @@ export class InputWidgetView extends PyRopeWidgetView {
     protected _tooltip: HTMLSpanElement;
 
     init_callbacks() {
-        this.model.on('change:_score', this.insert_score, this);
+        this.model.on('change:_score', this.render_score, this);
         this.model.on(
-            'change:_solution_mime_bundle', this.insert_solution, this
+            'change:_solution_mime_bundle', this.render_solution, this
         );
         this.model.on('change:disabled', this.change_disabled, this);
         this.model.on('change:title', this.change_title, this);
@@ -560,8 +560,10 @@ export class InputWidgetView extends PyRopeWidgetView {
         );
         this._result_btn.append(question_icon, this._tooltip);
         tooltip_container.appendChild(this._result_btn);
-        this.insert_score();
-        this.displayed.then(() => this.insert_solution());
+        this.displayed.then(() => {
+            this.render_score();
+            this.render_solution();
+        });
     }
 
     change_disabled() {}
@@ -572,7 +574,7 @@ export class InputWidgetView extends PyRopeWidgetView {
 
     change_value() {}
 
-    insert_score() {
+    render_score() {
         const score = this.model.get('_score');
         if (
             score === '' &&
@@ -593,7 +595,7 @@ export class InputWidgetView extends PyRopeWidgetView {
         this._score_span.textContent = score;
     }
 
-    insert_solution() {
+    render_solution() {
         this._solution_span.replaceChildren();
         const solution = this.model.get('_solution_mime_bundle');
         if (solution.length === 0 && this.model.get('_score') === '') {
