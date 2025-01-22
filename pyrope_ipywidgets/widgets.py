@@ -475,3 +475,13 @@ class GraphicalHotspot(InputWidget):
     all_coords = List([]).tag(sync=True)
     
     value = List([]).tag(sync=True)
+    
+class GraphicalSelectPoint(InputWidget):
+    
+    _model_name = Unicode('GraphicalSelectPointModel').tag(sync=True)
+    _view_name = Unicode('GraphicalSelectPointView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    
+    value = List([]).tag(sync=True)

@@ -946,6 +946,7 @@ export class TextAreaView extends TextView {
 //TODO create general Graphical Model/View
 //TODO create general File (Background) Model/View  
 
+
 export class GraphicalHotspotModel extends InputWidgetModel {
     defaults() {
         return {
@@ -974,7 +975,6 @@ export class GraphicalHotspotModel extends InputWidgetModel {
     static view_name = 'GraphicalHotspotView';
 }
 
-
 export class GraphicalHotspotView extends InputWidgetView {
 
     //TODO dollar sign?
@@ -988,10 +988,11 @@ export class GraphicalHotspotView extends InputWidgetView {
     }
     render() {
 
+        //TODO response type should be basyType of identifier
         this.container = document.createElement('div');
         
         //TODO move to .css
-        this.container.style.display = 'inline-block'
+        this.container.style.display = 'inline-block';
         this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
@@ -1010,11 +1011,6 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         this.el.append(this.container);
 
-        console.log('Children:')
-        console.log(this.el.children)
-        console.log(this.container)
-
-
         super.render();
     }
 
@@ -1024,22 +1020,21 @@ export class GraphicalHotspotView extends InputWidgetView {
         this.background.style.height = `100%`;
         this.background.style.width = `100%`;
         
-        
         this.background.style.display = 'inline'
         this.background.style.border='1px solid black';
         this.background.style.position='absolute';
         this.background.style.zIndex='1';
         this.background.classList.add('pyrope');        
 
-        this.container.append(this.background)
+        this.container.append(this.background);
     }
 
     change_icon_src() {
         const all_coords: Array<string> = this.model.get('all_coords');
-        console.log('All Icons: ' + all_coords)
+        console.log('All Icons: ' + all_coords);
 
         all_coords.forEach(coords => {
-            this.create_icon_element(coords)
+            this.create_icon_element(coords);
         });
     }
 
@@ -1052,24 +1047,24 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         //TODO extra modification for reshaping icons (e.g. circles)
         icon.style.zIndex='2';
-        icon.style.display = 'inline'
+        icon.style.display = 'inline';
         icon.style.position='absolute';
         
         //TODO use given coords as center
         //TODO would require not being able to place image near edges (test case in python) 
         const [x ,y] = coords.split(',');
-        console.log('Creating Icon for coords: ' + x + ' ' + y)
+        console.log('Creating Icon for coords: ' + x + ' ' + y);
         icon.style.left = `${x}px`;
         icon.style.top = `${y}px`;
-        icon.style.opacity = '40%'
+        icon.style.opacity = '40%';
 
         //TODO if needed
         //coord_element.style.borderRadius = '50%'
         icon.classList.add('pyrope');
 
-        icon.onclick = this.change_on_clicked.bind(this, icon)
+        icon.onclick = this.change_on_clicked.bind(this, icon);
 
-        this.container.append(icon)
+        this.container.append(icon);
     }
 
     change_on_clicked(icon : HTMLImageElement) {
@@ -1082,23 +1077,23 @@ export class GraphicalHotspotView extends InputWidgetView {
         const index = current_coords.indexOf(coords)
         if (index >= 0) {
             //icon was already clicked, remove from tracked list and reset opacity 
-            icon.style.opacity = '40%'
+            icon.style.opacity = '40%';
             //TODO only for debugging for now
-            console.log(`Before: ${this.model.get('value')}`)
-            console.log(`${coords} will be removed from tracked`)
-            current_coords.splice(index, 1)
-            this.model.set('value', current_coords)
-            this.model.save_changes()
-            console.log(`After: ${this.model.get('value')}`)
+            console.log(`Before: ${this.model.get('value')}`);
+            console.log(`${coords} will be removed from tracked`);
+            current_coords.splice(index, 1);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+            console.log(`After: ${this.model.get('value')}`);
         } else {
             //icon not tracked yet, add to tracked list and set full opacity 
-            icon.style.opacity = '100%'
-            console.log(`Before: ${this.model.get('value')}`)
-            console.log(`${coords} will be added to tracked`)
-            current_coords.push(coords)
-            this.model.set('value', current_coords)
-            this.model.save_changes()
-            console.log(`After: ${this.model.get('value')}`)            
+            icon.style.opacity = '100%';
+            console.log(`Before: ${this.model.get('value')}`);
+            console.log(`${coords} will be added to tracked`);
+            current_coords.push(coords);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+            console.log(`After: ${this.model.get('value')}`);
         }
        
     }
@@ -1114,3 +1109,157 @@ export class GraphicalHotspotView extends InputWidgetView {
 
 }
 
+export class GraphicalSelectPointModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            //TODO NEXT see Slider how value is saved (thats used in solution)
+            //same here, change value on toggles
+
+            _model_name: GraphicalSelectPointModel.model_name,
+            _view_name: GraphicalSelectPointModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO default icon
+            //TODO resize icon with bg?
+            icon_src: '',
+            
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalSelectPointModel';
+    static view_name = 'GraphicalSelectPointView';
+}
+
+export class GraphicalSelectPointView extends InputWidgetView {
+
+    //TODO dollar sign?
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        //TODO move to .css
+        //this.container.style.display = 'inline-block'
+        this.container.style.display = 'block';
+        this.container.style.position = 'relative';
+        this.container.style.border='1px solid black';
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        //TODO overwrite min gap
+        //this.container.classList.add('pyrope');
+        
+        this.reset_container = document.createElement('div');
+        //TODO try remove inline
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        //this.reset_container.classList.add('pyrope');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+        
+        this.change_background_src();
+        this.container.onclick = this.create_icon_element.bind(this);
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `100%`;
+        this.background.style.width = `100%`;
+        
+        //this.background.style.display = 'inline';
+        this.background.style.border='1px solid black';
+        this.background.style.position='absolute';
+        this.background.style.zIndex='1';
+        
+        this.container.append(this.background)
+    }
+
+    create_icon_element(event:MouseEvent) {
+
+        //TODO only render part inside of container
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        //TODO extra modification for reshaping icons (e.g. circles)
+        icon.style.zIndex='2';
+        icon.style.display = 'inline';
+        icon.style.position='absolute';
+        
+        //bounding rectangle of container == image for calculating offset to 
+        const rect = this.container.getBoundingClientRect();
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+        
+        //using upper left corner of icon to indicate where clicked
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+
+        //TODO better classname
+        icon.classList.add('pyrope', 'removable');
+        
+        this.container.append(icon);
+        
+        const selected_point = `${x},${y}`;
+        this.update_value(selected_point);
+
+    }
+
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+        const index = current_coords.indexOf(selected_point);
+        if (index >= 0) { 
+            console.log(`Selected point was already added to value: ${selected_point}`);
+        } else {
+            current_coords.push(selected_point);
+            console.log("Updated value " + `${current_coords}`);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+        }
+    }
+
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        const icons = document.getElementsByClassName('removable');
+        while(icons[0]) {
+            this.container.removeChild(icons[0]);
+        }
+    }
+    
+
+}
