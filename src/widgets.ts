@@ -142,38 +142,27 @@ export class ExerciseView extends PyRopeWidgetView {
 
     // Container for all buttons of an exercise.
     protected _button_area: HTMLDivElement;
-
     // Container for the output widget to show debug messages.
     protected _debug_area: HTMLDivElement;
-
     // Horizontal line to separate the debug area.
     protected _debug_area_separator: HTMLHRElement;
-
     // Container for rendering the feedback.
     protected _feedback: HTMLDivElement;
-
     // Horizontal line to separate the feedback.
     protected _feedback_separator: HTMLHRElement;
-
     // Container for rendering hints.
     protected _hints: HTMLDivElement;
-
     // A map which keys are ofield names and values are the corresponding
     // mime model to render them.
     protected _ofield_models: Map<string, IRenderMime.IMimeModel>;
-
     // Container for rendering the preamble.
     protected _preamble: HTMLDivElement;
-
     // Horizontal line to separate the preamble.
     protected _preamble_separator: HTMLHRElement;
-
     // Container for rendering the problem.
     protected _problem: HTMLDivElement;
-
     // Container for rendering the total score.
     protected _total_score_container: HTMLDivElement;
-
     // Container for rendering warning messages, i.e. if there are empty and/or
     // invalid input fields).
     protected _warning: HTMLDivElement;
@@ -561,17 +550,13 @@ export class InputWidgetView extends PyRopeWidgetView {
     // Button to toggle a tooltip which contains the score and the solution of
     // an input widget.
     protected _result_btn: HTMLButtonElement;
-
     // Horizonzal line to separate the solution and the score inside the
     // tooltip.
     protected _result_separator: HTMLHRElement;
-
     // Container for the score.
     protected _score_span: HTMLSpanElement;
-
     // Container for the solution.
     protected _solution_span: HTMLSpanElement;
-
     // Container for the solution container, separator and score container.
     protected _tooltip: HTMLSpanElement;
 
@@ -756,6 +741,8 @@ export class CheckboxModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
+            // Checkboxes can only have true or false as a value. Defaults to
+            // false which means that the Checkbox is unchecked.
             value: false,
         }
     }
@@ -767,13 +754,17 @@ export class CheckboxModel extends InputWidgetModel {
 
 export class CheckboxView extends InputWidgetView {
 
+    // Input element which holds the DOM checkbox element.
     protected _checkbox: HTMLInputElement;
 
     render() {
+        // Create the checkbox element and bind a callback which is triggered
+        // when the checkbox is clicked.
         this._checkbox = document.createElement('input');
         this._checkbox.type = 'checkbox';
         this._checkbox.onclick = this.change_on_click.bind(this);
 
+        // Render the checkbox.
         this.el.append(this._checkbox);
         super.render();
     }
@@ -782,6 +773,8 @@ export class CheckboxView extends InputWidgetView {
         this.change_class_name(this._checkbox);
     }
 
+    // Update the model when the state of the checkbox changes. This method is
+    // bound to the click event of a checkbox.
     change_on_click() {
         this.model.set('value', this._checkbox.checked);
         this.model.save_changes();
@@ -806,8 +799,10 @@ export class DropdownModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
+            // The index of the currently selected option.
             _index: null,
 
+            // A list of strings which are rendered to represent the options.
             labels: [],
         }
     }
@@ -819,6 +814,7 @@ export class DropdownModel extends InputWidgetModel {
 
 export class DropdownView extends InputWidgetView {
 
+    // Select element which holds the DOM select element.
     protected _select: HTMLSelectElement;
 
     init_callbacks() {
@@ -828,13 +824,18 @@ export class DropdownView extends InputWidgetView {
     }
 
     render() {
+        // Create the dropdown and and bind a callback which is triggered when
+        // the selected label changes.
         this._select = document.createElement('select');
         this._select.onchange = this.change_on_change.bind(this);
-        this.el.append(this._select);
 
+        // Render the labels and select the label which is currently selected
+        // according to the model.
         this.change_labels();
         this.change_index();
 
+        // Render the dropdown.
+        this.el.append(this._select);
         super.render();
     }
 
@@ -842,6 +843,9 @@ export class DropdownView extends InputWidgetView {
         this.change_class_name(this._select);
     }
 
+    // If the model's _index gets updated, a new label needs to be selected.
+    // Notice that the (i + 1)th label is selected because of the additional
+    // default option.
     change_index() {
         const i = this.model.get('_index');
         if (i !== null) {
@@ -849,13 +853,23 @@ export class DropdownView extends InputWidgetView {
         }
     }
 
+    // Render the labels inside the select element.
     change_labels() {
+        // Clear the select element in case that labels were already rendered.
         this._select.replaceChildren();
+
+        // Create a hidden and empty default option which is selected by
+        // default. Otherwise the first label would be selected by default.
+        // Notice that this default option has to be considered when using
+        // the selectedIndex attribute of the select element.
         const default_option = document.createElement('option');
         default_option.disabled = true;
         default_option.hidden = true;
         default_option.selected = true;
         this._select.append(default_option);
+
+        // Create an option element for every label and append it to the
+        // select element.
         const labels = this.model.get('labels');
         labels.forEach((element: string) => {
             const option = document.createElement('option');
@@ -864,6 +878,8 @@ export class DropdownView extends InputWidgetView {
         });
     }
 
+    // Update the model when the selected label changes. _index has to be
+    // updated to selectedIndex - 1 because of the additional default option.
     change_on_change() {
         this.model.set('_index', this._select.selectedIndex - 1);
         this.model.save_changes();
@@ -884,9 +900,13 @@ export class RadioButtonsModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
+            // The index of the currently selected option.
             _index: null,
 
+            // A list of markdown templates which are rendered to represent the
+            // options.
             labels: [],
+            // Whether to render the radio buttons vertically or not.
             vertical: true,
         }
     }
@@ -898,7 +918,9 @@ export class RadioButtonsModel extends InputWidgetModel {
 
 export class RadioButtonsView extends InputWidgetView {
 
+    // Div Element which contains all radio button elements.
     protected _container: HTMLDivElement;
+    // Array containing all radio button elements.
     protected _radio_buttons: Array<HTMLInputElement>;
 
     init_callbacks() {
@@ -908,18 +930,25 @@ export class RadioButtonsView extends InputWidgetView {
         this.model.on('change:vertical', this.change_labels, this);
     }
 
+    // Since labels can be markdown templates they have to be rendered with the
+    // help of the render mime registry. This only works after the view is
+    // displayed which means that this.el is part of the DOM tree.
     render() {
         this.displayed.then(() => this._render());
     }
 
     _render() {
+        // Create the container.
         this._container = document.createElement('div');
         this._container.classList.add('pyrope');
-        this.el.append(this._container);
 
-        this.change_index();
+        // Render the radio buttons and select the radio button which is
+        // currently selected according to the model.
         this.change_labels();
+        this.change_index();
 
+        // Render the container.
+        this.el.append(this._container);
         super.render();
     }
 
@@ -936,17 +965,30 @@ export class RadioButtonsView extends InputWidgetView {
         }
     }
 
+    // Render the radio buttons with the corresponding labels.
     change_labels() {
+        // Clear the array and container in case that radio buttons were
+        // already rendered.
         this._radio_buttons = new Array();
         this._container.replaceChildren();
+
+        // Add a css class to the base container to render radio buttons
+        // vertically.
         const vertical = this.model.get('vertical');
         if (vertical) {
             this.el.classList.add('pyrope-vertical-radio-buttons');
         } else {
             this.el.classList.remove('pyrope-vertical-radio-buttons');
         }
+
         const labels = this.model.get('labels');
         labels.forEach(async (element: string) => {
+            // Create a radio button for every label. Use the view id (cid)
+            // to connect multiple radio buttons to one radio button group.
+            // Every view has a different cid therefore only radio buttons
+            // of one specific view are considered as one group. Furthermore
+            // add a callback to every radio button which gets triggered every
+            // time the selected radio button changes.
             const radio_button = document.createElement('input');
             radio_button.type = 'radio';
             radio_button.classList.add('pyrope');
@@ -955,19 +997,24 @@ export class RadioButtonsView extends InputWidgetView {
                 this.change_on_change(this, radio_button)
             });
             this._radio_buttons.push(radio_button);
+
+            // Create a label element and append it right behind the
+            // corresponding radio button inside the DOM tree. Since labels
+            // are markdown templates they have to be rendered via the render
+            // mime registry.
             const label = document.createElement('label');
             label.classList.add('pyrope');
             this._container.append(radio_button, label);
             if (vertical) {
                 this._container.append(document.createElement('br'));
             }
-            const label_model = PyRopeWidgetView.renderMimeRegistry.createModel(
-                {'data': {'text/markdown': element}}
-            );
+            const label_model = PyRopeWidgetView.renderMimeRegistry
+            .createModel({'data': {'text/markdown': element}});
             await this.render_model(label_model, label);
         });
     }
 
+    // Update the model when the selected radio button changes.
     change_on_change(view: RadioButtonsView, radio_button: HTMLInputElement) {
         view.model.set('_index', this._radio_buttons.indexOf(radio_button));
         view.model.save_changes();
@@ -990,10 +1037,16 @@ export class SliderModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
+            // The slider's maximal value.
             maximum: 100.0,
+            // The slider's minimal value.
             minimum: 0.0,
+            // The step size while sliding.
             step: 1.0,
+            // The slider's current value.
             value: 0.0,
+            // The slider's width in percent. The percentage refers to the
+            // width of the container the slider is contained by.
             width: 25,
         }
     }
@@ -1005,7 +1058,9 @@ export class SliderModel extends InputWidgetModel {
 
 export class SliderView extends InputWidgetView {
 
+    // Slider element which holds the DOM slider element.
     protected _slider: HTMLInputElement;
+    // Container element for showing the current slider value.
     protected _slider_info: HTMLDivElement;
 
     init_callbacks() {
@@ -1017,8 +1072,13 @@ export class SliderView extends InputWidgetView {
     }
 
     render() {
+        // Create the slider element.
         this._slider = document.createElement('input');
         this._slider.type = 'range';
+
+        // Show and update the slider info container when an interaction
+        // begins. Notice that mouse and touch events have to treated
+        // separatly.
         this._slider.addEventListener('mousedown', () => {
             this.update_slider_info();
             this._slider_info.classList.toggle('show');
@@ -1027,9 +1087,14 @@ export class SliderView extends InputWidgetView {
             this.update_slider_info();
             this._slider_info.classList.toggle('show');
         });
+
+        // Update the slider info container when the slider's value changes.
         this._slider.addEventListener('input', () => {
             this.update_slider_info();
         });
+
+        // Update the model and hide the info container when an interaction
+        // ends.
         this._slider.addEventListener('mouseup', () => {
             this.change_on_interaction_end();
             this._slider_info.classList.toggle('show');
@@ -1039,17 +1104,22 @@ export class SliderView extends InputWidgetView {
             this._slider_info.classList.toggle('show');
         });
 
+        // Consider the current values of the model's attributes to build the
+        // view.
         this.change_maximum();
         this.change_minimum();
         this.change_step();
         this.change_width();
 
+        // Create the slider info container and a div element which contains
+        // the slider element and the info container.
         const container = document.createElement('div');
         container.classList.add('pyrope', 'slider-container');
         this._slider_info = document.createElement('div');
         this._slider_info.classList.add('pyrope', 'slider-info');
-        container.append(this._slider, this._slider_info);
 
+        // Render the slider.
+        container.append(this._slider, this._slider_info);
         this.el.append(container);
         super.render();
     }
@@ -1066,6 +1136,7 @@ export class SliderView extends InputWidgetView {
         this._slider.min = this.model.get('minimum');
     }
 
+    // Update the model when the slider's value changes.
     change_on_interaction_end() {
         this.model.set('value', parseFloat(this._slider.value));
         this.model.save_changes();
@@ -1092,6 +1163,9 @@ export class SliderView extends InputWidgetView {
         this._slider.style.width = `${this.model.get('width')}%`;
     }
 
+    // Set the content of _slider_info to the current value and calculate the
+    // position of the info container so that it is always shown right above
+    // the slider thumb.
     update_slider_info() {
         const thumb_width = parseInt(getComputedStyle(document.documentElement)
             .getPropertyValue('--slider-thumb-size'));
@@ -1114,8 +1188,13 @@ export class TextModel extends InputWidgetModel {
         return {
             ...super.defaults(),
 
+            // A string which is shown inside the text input when the input is
+            // empty.
             placeholder: '',
+            // The current value of the text input.
             value: '',
+            // The width of the text input. The value refers to the amount of
+            // characters that fit into the text input.
             width: 20,
         };
     }
@@ -1127,6 +1206,9 @@ export class TextModel extends InputWidgetModel {
 
 export class TextView extends InputWidgetView {
 
+    // Input element which holds the DOM text input element. _text needs to
+    // be typed with HTMLTextAreaElement so that TextAreaView can inherit from
+    // TextView.
     protected _text: HTMLInputElement | HTMLTextAreaElement;
 
     init_callbacks() {
@@ -1135,18 +1217,24 @@ export class TextView extends InputWidgetView {
         this.model.on('change:width', this.change_width, this);
     }
 
+    // Create the text input element.
     create_input_element() {
         this._text = document.createElement('input');
         this._text.type = 'text';
     }
 
     render() {
+        // Create the text input element and bind a callback which is triggered
+        // when the input value changes.
         this.create_input_element();
         this._text.oninput = this.change_on_input.bind(this);
 
+        // Consider the current values of the model's attributes to build the
+        // view.
         this.change_placeholder();
         this.change_width();
 
+        // Render the text input.
         this.el.append(this._text)
         super.render();
     }
@@ -1155,6 +1243,7 @@ export class TextView extends InputWidgetView {
         this.change_class_name(this._text);
     }
 
+    // Update the model when the value of the text input element changes.
     change_on_input() {
         this.model.set('value', this._text.value);
         this.model.save_changes();
@@ -1187,7 +1276,11 @@ export class TextAreaModel extends TextModel {
         return {
             ...super.defaults(),
 
+            // The height of the text area. The value refers to the amount of
+            // rows that fit into the text area element.
             height: 4,
+            // The width of the text area. The value refers to the amount of
+            // characters that fit into the text area element.
             width: 50,
         }
     }
@@ -1199,6 +1292,7 @@ export class TextAreaModel extends TextModel {
 
 export class TextAreaView extends TextView {
 
+    // Input element which holds the DOM textarea element.
     protected _text: HTMLTextAreaElement;
 
     init_callbacks() {
