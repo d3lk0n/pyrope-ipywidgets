@@ -56,7 +56,7 @@ export class PyRopeWidgetView extends DOMWidgetView {
     }
 
     // Callbacks can be initialized in this method for readability purposes, so
-    // that they do not have to be initialized in the render methode.
+    // that they do not have to be initialized in the render method.
     init_callbacks() {}
 
     // Render a mime model with the render mime registry inside a host element.
@@ -120,7 +120,7 @@ export class ExerciseView extends PyRopeWidgetView {
     // Container for the output widget to show debug messages.
     protected _debug_area: HTMLDivElement;
 
-    // Horizontal line to separator the debug area.
+    // Horizontal line to separate the debug area.
     protected _debug_area_separator: HTMLHRElement;
 
     // Container for rendering the feedback.
@@ -492,6 +492,7 @@ export class ExerciseView extends PyRopeWidgetView {
 }
 
 
+// Base model class for PyRope's input widgets.
 export class InputWidgetModel extends PyRopeWidgetModel {
     defaults() {
         return {
@@ -516,14 +517,30 @@ export class InputWidgetModel extends PyRopeWidgetModel {
 }
 
 
+// Base view class for PyRope's input widgets. After every input widget a
+// button for toggling a tooltip showing the score and the solution of a widget
+// is rendered.
 export class InputWidgetView extends PyRopeWidgetView {
 
+    // Button to toggle a tooltip which contains the score and the solution of
+    // an input widget.
     protected _result_btn: HTMLButtonElement;
+
+    // Horizonzal line to separate the solution and the score inside the
+    // tooltip.
     protected _result_separator: HTMLHRElement;
+
+    // Container for the score.
     protected _score_span: HTMLSpanElement;
+
+    // Container for the solution.
     protected _solution_span: HTMLSpanElement;
+
+    // Container for the solution container, separator and score container.
     protected _tooltip: HTMLSpanElement;
 
+    // Since every widget has the following attributes their callbacks are
+    // initialized in the parent class.
     init_callbacks() {
         this.model.on('change:_score', this.render_score, this);
         this.model.on(
@@ -535,20 +552,36 @@ export class InputWidgetView extends PyRopeWidgetView {
         this.model.on('change:value', this.change_value, this);
     }
 
+    // General render method for PyRope's input widgets. This method should be
+    // invoked inside the render method of child classes so that every widget
+    // has a button to show the solution and score. It should be called at the
+    // end of the child class' render method so that the button will be
+    // rendered behind an input widget.
     render() {
+        // Take attribute's current values into account to render the view.
+        // With that it is not necessary to call these methods in child
+        // classes.
         this.change_disabled();
         this.change_title();
         this.change_valid();
         this.change_value();
 
+        // Create a container which contains the result button.
         const tooltip_container = document.createElement('div');
         tooltip_container.classList.add('pyrope', 'tooltip');
         this.el.appendChild(tooltip_container);
+
+        // Create a button for showing the results.
         this._result_btn = document.createElement('button');
         this._result_btn.classList.add('pyrope', 'ifield');
         this._result_btn.onclick = this.toggle_tooltip.bind(this);
+
+        // Create a question mark icon.
         const question_icon = document.createElement('i');
         question_icon.classList.add('bi', 'bi-question-circle', 'pyrope');
+
+        // Create _tooltip, _score_span, _result_separator and _solution_span
+        // and append them to the tooltip container.
         this._tooltip = document.createElement('span');
         this._tooltip.classList.add('pyrope');
         this._score_span = document.createElement('span');
@@ -560,22 +593,30 @@ export class InputWidgetView extends PyRopeWidgetView {
         );
         this._result_btn.append(question_icon, this._tooltip);
         tooltip_container.appendChild(this._result_btn);
+
+        // Render the current score and solution inside the tooltip. The
+        // rendering methods need to be called after this.el is displayed and
+        // therefore part of the DOM tree because otherwise mime models cannot
+        // be rendered. This is specifically needed to render solutions.
         this.displayed.then(() => {
             this.render_score();
             this.render_solution();
         });
     }
 
+    // Abstract callback methods if an attribute gets updated. These methods
+    // should be implemented in child classes.
     change_disabled() {}
-
     change_title() {}
-
     change_valid() {}
-
     change_value() {}
 
+    // Render the score inside _score_span.
     render_score() {
         const score = this.model.get('_score');
+
+        // If there is no score and no solution to show, the result button
+        // is disabled.
         if (
             score === '' &&
             this.model.get('_solution_mime_bundle').length === 0
@@ -584,6 +625,9 @@ export class InputWidgetView extends PyRopeWidgetView {
         } else {
             this._result_btn.disabled = false;
         }
+
+        // If there is a score and a solution to show, score and solution are
+        // separated by a horizonzal line. Otherwise the separator is hidden.
         if (
             score !== '' &&
             this.model.get('_solution_mime_bundle').length !== 0
@@ -592,33 +636,49 @@ export class InputWidgetView extends PyRopeWidgetView {
         } else {
             this._result_separator.classList.add('hide');
         }
+
+        // Set the score string.
         this._score_span.textContent = score;
     }
 
+    // Render the solution inside _solution_span.
     render_solution() {
+        // Clear the solution span in case a solution was already rendered.
         this._solution_span.replaceChildren();
         const solution = this.model.get('_solution_mime_bundle');
+
+        // If there is no score and no solution to show, the result button
+        // is disabled.
         if (solution.length === 0 && this.model.get('_score') === '') {
             this._result_btn.disabled = true;
         } else {
             this._result_btn.disabled = false;
         }
+
+        // If there is a score and a solution to show, score and solution are
+        // separated by a horizonzal line. Otherwise the separator is hidden.
         if (solution.length !== 0 && this.model.get('_score') !== '') {
             this._result_separator.classList.remove('hide');
         } else {
             this._result_separator.classList.add('hide');
         }
+
+        // Return if there is no mime bundle to render.
         if (solution.length === 0) { return }
+
+        // Create and render the solution mime model.
         const model = PyRopeWidgetView.renderMimeRegistry.createModel(
             {'data': solution[0], 'metadata': solution[1]}
         );
         this.render_model(model, this._solution_span);
     }
 
+    // Show or hide the tooltip.
     toggle_tooltip() {
         this._tooltip.classList.toggle('show');
     }
 
+    // Return a valid css widget class name depending on a boolean value.
     get_class_name(value: Boolean) {
         let class_name = 'pyrope';
         if (value === true) {
@@ -629,9 +689,19 @@ export class InputWidgetView extends PyRopeWidgetView {
         return class_name;
     }
 
+    // Change the css class name of any DOM element. The class name is
+    // determined by the model's attributes "disabled", "correct" and
+    // "valid".
     change_class_name(element: any) {
+        // Disable or enable the given element. This is important because the
+        // style of an element can change based on if it is enabled or
+        // disabled.
         const disabled = this.model.get('disabled');
         element.disabled = disabled;
+
+        // If an input widget is disabled, it changes its style depending
+        // on if the input is correct or not. If it is enabled, the style
+        // changes based on if the input is valid or not.
         if (disabled === true) {
             element.className = this.get_class_name(
                 this.model.get('correct')
