@@ -62,13 +62,94 @@ export class PyRopeWidgetView extends DOMWidgetView {
     // Render a mime model with the render mime registry inside a host element.
     // The host element needs to be attached to the DOM tree, otherwise the
     // model cannot be attached to the host.
-    async render_model(model: IRenderMime.IMimeModel, host: HTMLElement) {
+    async render_mime_model(model: IRenderMime.IMimeModel, host: HTMLElement) {
         const registry = PyRopeWidgetView.renderMimeRegistry;
         const mime_type = registry.preferredMimeType(model.data);
         if(mime_type !== undefined) {
             const renderer = registry.createRenderer(mime_type);
             await renderer.renderModel(model);
             Widget.attach(renderer, host);
+        }
+    }
+
+    // Create and return a view for a given widget model.
+    async create_widget_view(model: DOMWidgetModel) {
+        const view = await model.widget_manager.create_view(model);
+        // The "displayed" event needs to be triggered manually to actually
+        // render a widget.
+        view.trigger('displayed');
+        return view;
+    }
+
+    // Render a widget model by creating its view and appending it to the
+    // host element.
+    async render_widget_model(model: DOMWidgetModel, host: HTMLElement) {
+        const view = await this.create_widget_view(model);
+        host.appendChild(view.el);
+    }
+
+    // Render a map of mime or widget models with a given render function
+    // inside a given domain.
+    render_models(
+        models: Map<String, IRenderMime.IMimeModel | DOMWidgetModel>,
+        render: (model: any, host: HTMLElement) => void, domain: HTMLElement
+    ) {
+        for(let [field_name, model] of models) {
+            // A model which key is called field_name is rendered inside all
+            // elements that have its field_name as value for the data
+            // attribute "data-pyrope-field-name". Notice that models are only
+            // rendered inside elements that are part of a given domain
+            // element.
+            const elements = domain.querySelectorAll<HTMLElement>(
+                `[data-pyrope-field-name="${field_name}"]`
+            );
+            for (let i = 0; i < elements.length; i++) {
+                render(model, elements[i]);
+            }
+        }
+    }
+
+    // Return a styled div element depending on the given type. Valid types
+    // are info and warning. Raises an error for invalid types. The returned
+    // container contains an icon which depends on the type and a span element
+    // to show text.
+    create_alert_box(type: string) {
+        const container = document.createElement('div');
+        container.classList.add('pyrope', 'alert');
+        const icon = document.createElement('i');
+        icon.classList.add('bi', 'pyrope');
+        if (type === 'info') {
+            container.classList.add('info');
+            icon.classList.add('bi-info-circle');
+        } else if (type === 'warning') {
+            container.classList.add('warning');
+            icon.classList.add('bi-exclamation-triangle');
+        } else {
+            throw new Error(
+                "Alert box type has to be either 'info' or 'warning'."
+            );
+        }
+        const content = document.createElement('span');
+        content.classList.add('pyrope', 'alert-content')
+        container.append(icon, content);
+        return container;
+    }
+
+    // Render an alert box with a specific text. The host to be a container
+    // which is structured like containers returned by "create_alert_box"
+    // method. Furthermore the host needs to have the "alert" css class.
+    render_alert_box(host: HTMLDivElement, text: string) {
+        // The last child refers to the span element of an alert box.
+        if (host.lastChild !== null) {
+            host.lastChild.textContent = text;
+        }
+
+        // Hide the host container if the text string is empty and show it
+        // otherwise.
+        if (text === '') {
+            host.classList.remove('show');
+        } else {
+            host.classList.add('show');
         }
     }
 }
@@ -187,9 +268,9 @@ export class ExerciseView extends PyRopeWidgetView {
     }
 
     // Since models can only be rendered if the host element is attached to
-    // the DOM tree (see PyRopeWidgetView.render_model), the _render method is
-    // executed after the container element of an exercise (this.el) was
-    // attached.
+    // the DOM tree (see PyRopeWidgetView.render_mime_model), the _render
+    // method is executed after the container element of an exercise (this.el)
+    // was attached.
     render() {
         this.displayed.then(() => this._render());
     }
@@ -258,32 +339,6 @@ export class ExerciseView extends PyRopeWidgetView {
         this.render_debug_area();
     }
 
-    // Return a styled div element depending on the given type. Valid types
-    // are info and warning. Raises an error for invalid types. The returned
-    // container contains an icon which depends on the type and a span element
-    // to show text.
-    create_alert_box(type: string) {
-        const container = document.createElement('div');
-        container.classList.add('pyrope', 'alert');
-        const icon = document.createElement('i');
-        icon.classList.add('bi', 'pyrope');
-        if (type === 'info') {
-            container.classList.add('info');
-            icon.classList.add('bi-info-circle');
-        } else if (type === 'warning') {
-            container.classList.add('warning');
-            icon.classList.add('bi-exclamation-triangle');
-        } else {
-            throw new Error(
-                "Alert box type has to be either 'info' or 'warning'."
-            );
-        }
-        const content = document.createElement('span');
-        content.classList.add('pyrope', 'alert-content')
-        container.append(icon, content);
-        return container;
-    }
-
     // Everytime the model's _ofield_mime_bundles attribute gets updated, this
     // method converts all mime bundles to mime models with the help of the
     // render mime registry.
@@ -346,38 +401,9 @@ export class ExerciseView extends PyRopeWidgetView {
         }
     }
 
-    // Render a map of mime or widget models with a given render function
-    // inside a given domain.
-    render_models(
-        models: Map<String, IRenderMime.IMimeModel | DOMWidgetModel>,
-        render: (model: any, host: HTMLElement) => void, domain: HTMLElement
-    ) {
-        for(let [field_name, model] of models) {
-            // A model which key is called field_name is rendered inside all
-            // elements that have its field_name as value for the data
-            // attribute "data-pyrope-field-name". Notice that models are only
-            // rendered inside elements that are part of a given domain
-            // element.
-            const elements = domain.querySelectorAll<HTMLElement>(
-                `[data-pyrope-field-name="${field_name}"]`
-            );
-            for (let i = 0; i < elements.length; i++) {
-                render(model, elements[i]);
-            }
-        }
-    }
-
-    // Create and return a view for a given widget model.
-    async create_widget_view(model: DOMWidgetModel) {
-        const view = await model.widget_manager.create_view(model);
-        // The "displayed" event needs to be triggered manually to actually
-        // render a widget.
-        view.trigger('displayed');
-        return view;
-    }
-
-    // Render all output fields and then render the whole template with a
-    // Markdown renderer does not work for some reason.
+    // Render the whole template with a Markdown renderer and then render all
+    // output fields. Render the output fields first and then render the
+    // template does not work for some reason.
     async render_ofields(
         template: string, host: HTMLDivElement | HTMLSpanElement
     ) {
@@ -409,11 +435,11 @@ export class ExerciseView extends PyRopeWidgetView {
             {'data': {'text/markdown': host.innerHTML}}
         );
         host.replaceChildren();
-        await this.render_model(template_model, host);
+        await this.render_mime_model(template_model, host);
 
         // Render all output fields outside of an LaTeX environment inside
         // their placeholder span.
-        this.render_models(this._ofield_models, this.render_model, host);
+        this.render_models(this._ofield_models, this.render_mime_model, host);
     }
 
     // Render the problem.
@@ -433,27 +459,8 @@ export class ExerciseView extends PyRopeWidgetView {
         // Render the widget models.
         this.render_models(widgets_map, async (widget_model, widget_host) => {
             widget_host.classList.add('pyrope', 'field', 'ifield');
-            const view = await this.create_widget_view(widget_model);
-            widget_host.appendChild(view.el);
+            this.render_widget_model(widget_model, widget_host);
         }, this._problem);
-    }
-
-    // Render an alert box with a specific text. The host to be a container
-    // which is structured like containers returned by "create_alert_box"
-    // method. Furthermore the host needs to have the "alert" css class.
-    render_alert_box(host: HTMLDivElement, text: string) {
-        // The last child refers to the span element of an alert box.
-        if (host.lastChild !== null) {
-            host.lastChild.textContent = text;
-        }
-
-        // Hide the host container if the text string is empty and show it
-        // otherwise.
-        if (text === '') {
-            host.classList.remove('show');
-        } else {
-            host.classList.add('show');
-        }
     }
 
     // Render all hints which are stored inside the attribute _displayed_hints.
@@ -691,7 +698,7 @@ export class InputWidgetView extends PyRopeWidgetView {
         const model = PyRopeWidgetView.renderMimeRegistry.createModel(
             {'data': solution[0], 'metadata': solution[1]}
         );
-        this.render_model(model, this._solution_span);
+        this.render_mime_model(model, this._solution_span);
     }
 
     // Show or hide the tooltip.
@@ -1010,7 +1017,7 @@ export class RadioButtonsView extends InputWidgetView {
             }
             const label_model = PyRopeWidgetView.renderMimeRegistry
             .createModel({'data': {'text/markdown': element}});
-            await this.render_model(label_model, label);
+            await this.render_mime_model(label_model, label);
         });
     }
 
