@@ -80,19 +80,45 @@ export class ExerciseModel extends PyRopeWidgetModel {
         return {
             ...super.defaults(),
 
+            // List of markdown templates which are rendered as hints in the
+            // _hints container.
             _displayed_hints: [],
+            // A markdown template which is rendered as feedback in the
+            // _feedback container.
             _feedback: '',
+            // A dictionary where keys are output field names and values are
+            // mime bundles. A mime bundle is a list of two dictionaries. One
+            // dictionary contains representations of a Python object for
+            // different mime types and the second one contains optional
+            // metadata.
             _ofield_mime_bundles: {},
+            // A markdown template which is rendered as the preamble in the
+            // _preamble container.
             _preamble: '',
+            // A markdown template which is rendered as the exercise's problem
+            // in the _problem container. This is the only template where one
+            // can use placeholders to render widgets.
             _problem: '',
+            // A string which is rendered inside the _total_score_container
+            // div element.
             _total_score: '',
 
+            // Ipywidgets button model which clears all debug messages.
             clear_debug_btn: ButtonModel,
+            // Boolean flag indicating the debug mode of an exercise.
             debug: false,
+            // Ipywidgets output model for showing debug messages.
             debug_output: OutputModel,
+            // Ipywidgets button model which renders the next hint if there is
+            // one.
             hint_btn: ButtonModel,
+            // Ipywidgets button model for submitting an exercise.
             submit_btn: ButtonModel,
+            // A string which is rendered inside _warning container. If the
+            // string is empty, _warning will not be displayed.
             warning: '',
+            // A dictionary where keys are widget ids and values are widget
+            // models.
             widgets: {},
         };
     }
@@ -498,12 +524,22 @@ export class InputWidgetModel extends PyRopeWidgetModel {
         return {
             ...super.defaults(),
 
+            // A string which is rendered inside the _score_span container.
             _score: '',
+            // A mime bundle which is a list of two dictionaries. One contains
+            // representations of the solution Python object for different
+            // mime types and the second one contains optional metadata.
             _solution_mime_bundle: [],
 
+            // A boolean flag indicating whether the widget's input is correct
+            // or not.
             correct: null,
+            // A boolean flag indicating if the widgets is disabled or not.
             disabled: false,
+            // A string which is shown when hovering over the widget.
             title: '',
+            // A boolean flag indicating whether the widget's input is valid
+            // or not.
             valid: null,
         }
     }
