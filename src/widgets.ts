@@ -964,7 +964,6 @@ export class GraphicalHotspotModel extends InputWidgetModel {
             //TODO resize icon with bg?
             icon_src: '',
             
-            //coords by x,y,required
             all_coords: [] as string[],
 
             value: [] as string[]
@@ -1069,6 +1068,7 @@ export class GraphicalHotspotView extends InputWidgetView {
 
     change_on_clicked(icon : HTMLImageElement) {
 
+        //TODO use identifier (in dict instead?)
         const x = icon.style.left.replace('px', '')
         const y = icon.style.top.replace('px', '')
 
@@ -1147,21 +1147,18 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.model.on('change:background_src', this.change_background_src, this);
     }
 
+    //TODO optionally render areas (for debugging/testing)
     render() {
         this.container = document.createElement('div');
         
         //TODO move to .css
-        //this.container.style.display = 'inline-block'
         this.container.style.display = 'block';
         this.container.style.position = 'relative';
         this.container.style.border='1px solid black';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
-        //TODO overwrite min gap
-        //this.container.classList.add('pyrope');
         
         this.reset_container = document.createElement('div');
-        //TODO try remove inline
         this.reset_container.style.display = 'inline-flex';
         this.reset_container.style.position = 'relative';
         this.reset_container.style.height = `30px`;
@@ -1170,8 +1167,6 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.reset_container.style.top = this.container.style.bottom;
         this.reset_container.style.alignItems = 'center';
         this.reset_container.style.justifyContent = 'center';
-        
-        //this.reset_container.classList.add('pyrope');
         
         this.reset_button = document.createElement('button');
         this.reset_button.classList.add('pyrope', 'ifield');
@@ -1255,11 +1250,191 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.model.set('value', []);
         this.model.save_changes();
 
-        const icons = document.getElementsByClassName('removable');
+        const icons = this.container.getElementsByClassName('removable');
         while(icons[0]) {
             this.container.removeChild(icons[0]);
         }
     }
     
 
+}
+
+//TODO lock all graphical interactions on submit
+//-> remove all on clicks
+//-> gray out all buttons
+export class GraphicalOrderModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalHotspotModel.model_name,
+            _view_name: GraphicalHotspotModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO NEXT default icon (circle with num) -> svg in media
+            //TODO optionally render num next to/below icon?
+            icon_src: '',
+
+            //coords by x,y
+            all_coords: [] as string[],
+
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalOrderModel';
+    static view_name = 'GraphicalOrderView';
+}
+
+export class GraphicalOrderView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+        this.model.on('change:icon_src', this.change_icon_src, this);
+    }
+
+    render() {
+        //TODO response type should be basyType of identifier
+        this.container = document.createElement('div');
+        
+        //TODO move to .css
+        this.container.style.display = 'inline-block';
+        this.container.style.position = 'relative';
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        
+        this.container.classList.add('pyrope');
+        
+        this.change_background_src();
+        this.change_icon_src();
+        
+        this.el.append(this.container);
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `100%`;
+        this.background.style.width = `100%`;
+        
+        this.background.style.display = 'inline'
+        this.background.style.border='1px solid black';
+        this.background.style.position='absolute';
+        this.background.style.zIndex='1';
+        this.background.classList.add('pyrope');        
+
+        this.container.append(this.background);
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords);
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('div');
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        //TODO extra modification for reshaping icons (e.g. circles)
+        icon.style.zIndex='4';
+        icon.style.display = 'inline-flex';
+        icon.style.position = 'absolute';
+        icon.style.alignItems = 'center';
+        icon.style.justifyContent = 'center';
+        
+        const [x ,y] = coords.split(',');
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+
+        let icon_img = document.createElement('img');
+        icon_img.src = this.model.get('icon_src').src;
+        icon_img.style.height = `100%`;
+        icon_img.style.width = `100%`;
+        icon_img.style.display = 'inline';
+        icon_img.style.position='absolute';
+        icon_img.style.zIndex='2';
+
+        let icon_span = document.createElement('span');
+        icon_span.textContent = '';
+        icon_span.style.zIndex = '3';
+        icon_span.style.position = 'absolute';
+        icon_span.style.display = 'inline';
+        //TODO at least ~10
+        icon_span.style.fontSize = `${this.model.get('icon_src').height as number /2}px`;
+        icon_span.classList.add('filterable')
+    
+        icon.append(icon_img, icon_span);
+        
+        icon.classList.add('pyrope');
+
+        icon.onclick = this.change_on_clicked.bind(this, icon);
+
+        this.container.append(icon);
+    }
+
+    change_on_clicked(icon : HTMLDivElement) {
+
+        const x = icon.style.left.replace('px', '')
+        const y = icon.style.top.replace('px', '')
+
+        const coords = `${x},${y}`
+        const current_coords = this.model.get('value') as string[]
+        const index = current_coords.indexOf(coords)
+        if (index >= 0) {
+            //icon was already clicked, remove from tracked list 
+            //TODO only for debugging for now
+            console.log(`Before: ${this.model.get('value')}`);
+            console.log(`${coords} will be removed from tracked`);
+            current_coords.splice(index, 1);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+            console.log(`After: ${this.model.get('value')}`);
+        } else {
+            //icon not tracked yet, add to tracked list 
+            console.log(`Before: ${this.model.get('value')}`);
+            console.log(`${coords} will be added to tracked`);
+            current_coords.push(coords);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+            console.log(`After: ${this.model.get('value')}`);
+        }
+
+        //reset indeces according to order in tracked values
+        this.update_all_indeces();
+    }
+
+    update_all_indeces() {
+        const icons = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLSpanElement;
+            const x = icon.parentElement!.style.left.replace('px', '')
+            const y = icon.parentElement!.style.top.replace('px', '')
+            console.log(`Updating Index for ${x},${y}`)
+
+            const coords = `${x},${y}`
+            const current_coords = this.model.get('value') as string[]
+
+            const index = current_coords.indexOf(coords)
+            if (index >= 0) {
+                console.log(`setting index ${index+1}`)
+                icon.textContent = `${index+1}`
+            } else {
+                console.log(`setting empty`)
+                icon.textContent = ''
+            }
+        }
+    }
 }
