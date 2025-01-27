@@ -1,7 +1,7 @@
 {
-  "name": "pyrope-ipywidgets",
+  "name": "@pyrope-e-assessment/pyrope-ipywidgets",
   "version": "0.1.0",
-  "description": "The JupyterLab extension providing Jupyter widgets for the E-Assessment system PyRope.",
+  "description": "The JupyterLab extension providing Jupyter widgets for the e-assessment system PyRope.",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/PyRope-E-Assessment/pyrope-ipywidgets"
+    "url": "git+https://github.com/PyRope-E-Assessment/pyrope-ipywidgets.git"
   },
   "license": "AGPL-3.0-or-later",
   "author": {
