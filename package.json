@@ -1,11 +1,33 @@
 {
   "name": "pyrope-ipywidgets",
   "version": "0.1.0",
+  "description": "The JupyterLab extension providing Jupyter widgets for the E-Assessment system PyRope.",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab notebook",
+    "jupyterlab-extension",
+    "widgets",
+    "pyrope"
+  ],
   "files": [
     "lib/**/*.js",
     "dist/*.js",
     "css/*.css"
   ],
+  "homepage": "https://github.com/PyRope-E-Assessment/pyrope-ipywidgets",
+  "bugs": {
+    "url": "https://github.com/PyRope-E-Assessment/pyrope-ipywidgets/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PyRope-E-Assessment/pyrope-ipywidgets"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": {
+    "name": "Paul Brassel",
+    "email": "paul.brassel@htwk-leipzig.de"
+  },
   "main": "lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
