@@ -57,7 +57,7 @@ module.exports = [
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'amd',
         library: "pyrope-ipywidgets",
-        publicPath: 'https://unpkg.com/pyrope-ipywidgets@' + version + '/dist/'
+        publicPath: 'https://unpkg.com/@pyrope-e-assessment/pyrope-ipywidgets@' + version + '/dist/'
     },
     devtool: 'source-map',
     module: {
