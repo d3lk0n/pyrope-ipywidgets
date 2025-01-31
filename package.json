@@ -1,5 +1,5 @@
 {
-  "name": "@pyrope-e-assessment/pyrope-ipywidgets",
+  "name": "pyrope-ipywidgets",
   "version": "0.1.0",
   "description": "The JupyterLab extension providing Jupyter widgets for the e-assessment system PyRope.",
   "keywords": [
