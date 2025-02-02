@@ -496,3 +496,14 @@ class GraphicalOrder(InputWidget):
     all_coords = List([]).tag(sync=True)
     
     value = List([]).tag(sync=True)
+
+class GraphicalAssociate(InputWidget):
+    
+    _model_name = Unicode('GraphicalAssociateModel').tag(sync=True)
+    _view_name = Unicode('GraphicalAssociateView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)

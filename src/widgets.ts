@@ -944,14 +944,11 @@ export class TextAreaView extends TextView {
 
 //if necessary
 //TODO create general Graphical Model/View
-//TODO create general File (Background) Model/View  
-
-
+//TODO move to graphical_widgets ?
 export class GraphicalHotspotModel extends InputWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
-            //TODO NEXT see Slider how value is saved (thats used in solution)
             //same here, change value on toggles
 
             _model_name: GraphicalHotspotModel.model_name,
@@ -1113,9 +1110,7 @@ export class GraphicalSelectPointModel extends InputWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
-            //TODO NEXT see Slider how value is saved (thats used in solution)
-            //same here, change value on toggles
-
+            
             _model_name: GraphicalSelectPointModel.model_name,
             _view_name: GraphicalSelectPointModel.view_name,
 
@@ -1273,7 +1268,6 @@ export class GraphicalOrderModel extends InputWidgetModel {
             //TODO default white bg
             background_src: '',
             
-            //TODO NEXT default icon (circle with num) -> svg in media
             //TODO optionally render num next to/below icon?
             icon_src: '',
 
@@ -1367,13 +1361,14 @@ export class GraphicalOrderView extends InputWidgetView {
         icon_img.style.position='absolute';
         icon_img.style.zIndex='2';
 
+        //TODO remove cursor changing 
         let icon_span = document.createElement('span');
         icon_span.textContent = '';
         icon_span.style.zIndex = '3';
         icon_span.style.position = 'absolute';
         icon_span.style.display = 'inline';
         //TODO at least ~10
-        icon_span.style.fontSize = `${this.model.get('icon_src').height as number /2}px`;
+        icon_span.style.fontSize = `${parseInt(this.model.get('icon_src').height)/2}px`;
         icon_span.classList.add('filterable')
     
         icon.append(icon_img, icon_span);
@@ -1437,4 +1432,272 @@ export class GraphicalOrderView extends InputWidgetView {
             }
         }
     }
+}
+
+export class GraphicalAssociateModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            _model_name: GraphicalAssociateModel.model_name,
+            _view_name: GraphicalAssociateModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO default icon
+            icon_src: '',
+            
+            tracked_coords: {} as {x:number, y:number},
+
+            all_coords: [] as string[],
+
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalAssociateModel';
+    static view_name = 'GraphicalAssociateView';
+}
+
+export class GraphicalAssociateView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected bg_canvas: HTMLCanvasElement;
+    protected bg_context: CanvasRenderingContext2D;
+    protected drawing_canvas: HTMLCanvasElement;
+    protected drawing_context: CanvasRenderingContext2D;
+    
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+        this.model.on('change:icon_src', this.change_icon_src, this);
+    }
+    render() {
+
+        //TODO response type should be basyType of identifier
+        this.container = document.createElement('div');
+        
+        //TODO move to .css
+        this.container.style.display = 'inline-block';
+        this.container.style.position = 'relative';
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        
+        this.container.classList.add('pyrope');
+        
+        //TODO move
+        this.bg_canvas = document.createElement('canvas');
+        this.bg_canvas.style.position = 'absolute';
+        this.bg_canvas.style.zIndex='2';
+        this.bg_canvas.height = this.model.get('background_src').height;
+        this.bg_canvas.width = this.model.get('background_src').width;
+        this.bg_context = this.bg_canvas.getContext('2d')!;
+        
+        this.drawing_canvas = document.createElement('canvas');
+        this.drawing_canvas.style.position = 'absolute';
+        this.drawing_canvas.style.zIndex='4';
+        this.drawing_canvas.height = this.model.get('background_src').height;
+        this.drawing_canvas.width = this.model.get('background_src').width;
+        this.drawing_context = this.drawing_canvas.getContext('2d')!;
+        
+        this.drawing_canvas.onmousedown = this.start_draw_line.bind(this);
+        this.drawing_canvas.onmouseup = this.end_draw_line.bind(this);
+        this.drawing_canvas.onmousemove = this.move_line.bind(this);
+        
+        this.container.append(this.bg_canvas, this.drawing_canvas);
+        this.container.onmouseleave = this.reset_line.bind(this);
+
+        this.change_background_src();
+        this.change_icon_src();
+        
+        this.el.append(this.container);
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `100%`;
+        this.background.style.width = `100%`;
+        
+        this.background.style.display = 'inline';
+        this.background.style.border='1px solid black';
+        this.background.style.position='absolute';
+        this.background.style.zIndex='1';
+        
+        this.container.append(this.background);
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords);
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        //TODO extra modification for reshaping icons (e.g. circles)
+        icon.style.zIndex='3';
+        icon.style.display = 'inline';
+        icon.style.position='absolute';
+        
+        const [x ,y] = coords.split(',');
+        console.log('Creating Icon for coords: ' + x + ' ' + y);
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+        
+        icon.classList.add('pyrope', 'filterable');
+
+        this.container.append(icon);
+    }
+
+    start_draw_line(event:MouseEvent) {
+        const rect = this.container.getBoundingClientRect();
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+    
+        this.model.set('tracked_coords', {x,y});
+        this.model.save_changes();
+    }
+
+    move_line(event : MouseEvent) {
+        if(!this.model.get('tracked_coords')) {
+            return;
+        }
+
+        this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);
+        
+        //draw current line
+        this.drawing_context.beginPath();
+        this.drawing_context.strokeStyle = 'red';
+        this.drawing_context.lineWidth = 2
+        //initial coords of current selected icon  
+        const start = this.model.get('tracked_coords');
+        
+        const rect = this.container.getBoundingClientRect();
+        const x_end = Number((event.clientX - rect.left).toFixed(0));
+        const y_end = Number((event.clientY - rect.top).toFixed(0));
+        
+        this.drawing_context.moveTo(start.x, start.y);
+        this.drawing_context.lineTo(x_end, y_end);
+        this.drawing_context.stroke();
+        this.drawing_context.closePath();
+    }
+
+    reset_line() {
+        if(this.model.get('tracked_coords')) {
+            this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);    
+            this.model.set('tracked_coords', undefined);
+        }
+
+        this.redraw_bg();
+    }
+
+    redraw_bg() {
+        const all_tracked = this.model.get('value') as string[];
+
+        this.bg_context.clearRect(0,0,this.bg_canvas.width,this.bg_canvas.height);
+        this.bg_context.strokeStyle = 'black';
+        this.bg_context.lineWidth = 2;
+
+        const width_offset = this.model.get('icon_src').width / 2;
+        const height_offset = this.model.get('icon_src').height / 2;
+
+        all_tracked.forEach(coords => {
+            const [x1 ,y1, x2, y2] = coords.split(',').map(Number);
+
+            this.bg_context.beginPath();
+            this.bg_context.strokeStyle = 'black';
+            this.bg_context.moveTo(x1+width_offset, y1+height_offset);
+            this.bg_context.lineTo(x2+width_offset, y2+height_offset);
+            this.bg_context.stroke(); 
+            this.bg_context.closePath();
+        });        
+    }
+
+    end_draw_line(event:MouseEvent) {
+        if (!this.model.get('tracked_coords')) {
+            console.log("Couldn't end drawing line, no tracked center found.");
+            return;
+        }
+        
+        const rect = this.container.getBoundingClientRect();
+        const x_end = Number((event.clientX - rect.left).toFixed(0));
+        const y_end = Number((event.clientY - rect.top).toFixed(0));
+        
+        //determine if start and end point are within any icon boundaries
+        const start_icon = this.find_icon(this.model.get('tracked_coords'));
+        const end_icon = this.find_icon({x:x_end,y:y_end});
+    
+        if (!start_icon || !end_icon) {
+            console.log("Either start or end coordinates could not be matched to an icon.");
+        } else if (start_icon == end_icon) {
+            console.log('End icon is same as starting icon, resetting line without saving value.');
+        } else {
+            console.log('Adding selected icons to value.');
+
+            //TODO using id would be a lot easier
+            //compare whether these icons are already tracked
+            const all_tracked = this.model.get('value') as string[];
+
+            const x1 = start_icon.style.left.replace('px','');
+            const y1 = start_icon.style.top.replace('px','');
+            const x2 = end_icon.style.left.replace('px','');
+            const y2 = end_icon.style.top.replace('px','');
+
+            const index = all_tracked.indexOf(`${x1},${y1},${x2},${y2}`) != -1
+            ? all_tracked.indexOf(`${x1},${y1},${x2},${y2}`)
+            : all_tracked.indexOf(`${x2},${y2},${x1},${y1}`);
+
+            if (index >= 0) {
+                console.log('Icon pair was already tracked, removing pair from value and resetting line.');
+                all_tracked.splice(index, 1);
+                this.model.set('value', all_tracked);
+                this.model.save_changes();
+            } else {
+                console.log('Icon pair was not tracked yet, adding pair to value and resetting line.');
+                all_tracked.push(`${x1},${y1},${x2},${y2}`);
+                this.model.set('value', all_tracked);
+                this.model.save_changes();
+            }
+            console.log(`After: ${this.model.get('value')}`);
+        }
+
+        //always reset line (new tracked values will be redrawn)
+        this.reset_line()
+    }
+
+    find_icon(coords:{x:number,y:number}) {
+        const icons = this.container.getElementsByClassName('filterable');
+        
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+            const left = parseInt(icon.style.left.replace('px', ''));
+            const top = parseInt(icon.style.top.replace('px', ''));
+            const width = parseInt(icon.style.width.replace('px', ''));
+            const height = parseInt(icon.style.height.replace('px', ''));
+
+            if (coords.x > left && coords.x < left+width && coords.y > top && coords.y < top+height) {
+                return icon;
+            }
+        }   
+
+        return undefined;    
+    }
+    
+    //TODO validate method?
+
+    
+
 }
