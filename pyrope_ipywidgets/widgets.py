@@ -138,6 +138,9 @@ class Exercise(PyRopeWidget):
         sync=True, **widget_serialization
     )
     total_score = Float(None, allow_none=True).tag(sync=False)
+    user_output = Instance(Output, read_only=True).tag(
+        sync=True, **widget_serialization
+    )
     warning = Unicode('').tag(sync=True)
     widgets = Dict(default_value={}, key_trait=Unicode()).tag(
         sync=True, **widget_serialization
@@ -199,6 +202,10 @@ class Exercise(PyRopeWidget):
         btn = SubmitButton(submit, lambda _: self.submit())
         return btn
 
+    @default('user_output')
+    def default_user_output(self):
+        return Output()
+
     @observe('widgets')
     def observe_widgets(self, change):
         def handler(_):
@@ -246,7 +253,8 @@ class Exercise(PyRopeWidget):
         self._feedback = feedback
 
     def submit(self):
-        self.notify(Submit(self.__class__))
+        with self.user_output:
+            self.notify(Submit(self.__class__))
         self.disable()
         for widget in self.widgets.values():
             widget.display_score()

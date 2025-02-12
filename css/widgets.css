@@ -42,6 +42,9 @@ div.pyrope:empty {
 div.pyrope.problem div.lm-Widget[data-mime-type="text/markdown"] {
     overflow: visible;
 }
+div.pyrope.user-output {
+    padding: 0px;
+}
 
 div.lm-Widget:has(div.pyrope) {
     overflow: visible;

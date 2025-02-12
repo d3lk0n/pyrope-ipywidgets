@@ -195,6 +195,9 @@ export class ExerciseModel extends PyRopeWidgetModel {
             hint_btn: ButtonModel,
             // Ipywidgets button model for submitting an exercise.
             submit_btn: ButtonModel,
+            // Ipywidgets output model for showing standard output and errors
+            // of an exercise's template methods.
+            user_output: OutputModel,
             // A string which is rendered inside _warning container. If the
             // string is empty, _warning will not be displayed.
             warning: '',
@@ -210,6 +213,7 @@ export class ExerciseModel extends PyRopeWidgetModel {
         debug_output: { deserialize: unpack_models },
         hint_btn: { deserialize: unpack_models },
         submit_btn: { deserialize: unpack_models },
+        user_output: { deserialize: unpack_models },
         widgets: { deserialize: unpack_models },
     };
 
@@ -244,6 +248,9 @@ export class ExerciseView extends PyRopeWidgetView {
     protected _problem: HTMLDivElement;
     // Container for rendering the total score.
     protected _total_score_container: HTMLDivElement;
+    // Container for rendering the output model which shows the standard output
+    // and errors of an exercise's template methods.
+    protected _user_output_area: HTMLDivElement;
     // Container for rendering warning messages, i.e. if there are empty and/or
     // invalid input fields).
     protected _warning: HTMLDivElement;
@@ -276,6 +283,9 @@ export class ExerciseView extends PyRopeWidgetView {
     }
 
     async _render() {
+        this._user_output_area = document.createElement('div');
+        this._user_output_area.classList.add('pyrope', 'user-output');
+
         this._preamble = document.createElement('div');
         this._preamble.classList.add('pyrope', 'preamble');
         this._preamble_separator = this.new_separator();
@@ -311,15 +321,16 @@ export class ExerciseView extends PyRopeWidgetView {
 
         // Append all elements to the host element of this view.
         this.el.append(
-            this.new_separator(), this._preamble, this._preamble_separator,
-            this._problem, this._button_area, this._warning, this._hints,
-            this.new_separator(), this._feedback, this._total_score_container,
-            this._feedback_separator, this._debug_area,
-            this._debug_area_separator
+            this._user_output_area, this.new_separator(), this._preamble,
+            this._preamble_separator, this._problem, this._button_area,
+            this._warning, this._hints, this.new_separator(), this._feedback,
+            this._total_score_container, this._feedback_separator,
+            this._debug_area, this._debug_area_separator
         );
 
         // Call the rendering methods.
         this.create_ofield_models();
+        this.render_user_output_area();
         this.render_preamble();
         this.render_problem();
         this.populate_button_area();
@@ -332,9 +343,10 @@ export class ExerciseView extends PyRopeWidgetView {
         this.render_debug_area();
     }
 
-    // If the debug mode changes, the buttons and the debug area need to be
-    // rerendered.
+    // If the debug mode changes, the buttons, the debug and the user output
+    // area need to be rerendered.
     change_debug() {
+        this.render_user_output_area();
         this.populate_button_area();
         this.render_debug_area();
     }
@@ -361,6 +373,20 @@ export class ExerciseView extends PyRopeWidgetView {
         let separator = document.createElement('hr');
         separator.classList.add('pyrope');
         return separator;
+    }
+
+    // Render the user output area depending on the current debug mode.
+    async render_user_output_area() {
+        // Clear the user output area in case it was already rendered.
+        this._user_output_area.replaceChildren();
+
+        // Only show the user output area if the debug mode is enabled.
+        if (this.model.get('debug')) {
+            const user_output_view = await this.create_widget_view(
+                this.model.get('user_output')
+            );
+            this._user_output_area.append(user_output_view.el);
+        }
     }
 
     // Render the preamble and only show a separator after the preamble if
