@@ -1,6 +1,6 @@
 
 from pyrope_ipywidgets.widgets import (
-    Checkbox, Exercise, GraphicalHotspot, GraphicalSelectPoint, GraphicalOrder, GraphicalAssociate, RadioButtons, Slider, Text, TextArea
+    Checkbox, Exercise, GraphicalHotspot, GraphicalSelectPoint, GraphicalOrder, GraphicalAssociate, GraphicalGapMatch, RadioButtons, Slider, Text, TextArea
 )
 from pyrope_ipywidgets._version import __version__, version_info
 
@@ -12,6 +12,7 @@ __all__ = [
     'GraphicalSelectPoint',
     'GraphicalOrder',
     'GraphicalAssociate',
+    'GraphicalGapMatch',
     'RadioButtons',
     'Slider',
     'Text',

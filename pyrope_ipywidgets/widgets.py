@@ -223,6 +223,7 @@ class Exercise(PyRopeIPyWidget):
         self.hint_btn.disabled = True
         self.submit_btn.disabled = True
         for widget in self.widgets.values():
+            #TODO use to disable graphical widget inputs
             widget.disabled = True
 
     def display_total_score(self):
@@ -501,6 +502,17 @@ class GraphicalAssociate(InputWidget):
     
     _model_name = Unicode('GraphicalAssociateModel').tag(sync=True)
     _view_name = Unicode('GraphicalAssociateView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+    
+class GraphicalGapMatch(InputWidget):
+    
+    _model_name = Unicode('GraphicalGapMatchModel').tag(sync=True)
+    _view_name = Unicode('GraphicalGapMatchView').tag(sync=True)
     
     background_src = Any(None).tag(sync=True)
     icon_src = Any(None).tag(sync=True)

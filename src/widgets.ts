@@ -1697,7 +1697,246 @@ export class GraphicalAssociateView extends InputWidgetView {
     }
     
     //TODO validate method?
+}
 
-    
+export class GraphicalGapMatchModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalSelectPointModel.model_name,
+            _view_name: GraphicalSelectPointModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO default icon
+            icon_src: '',
+
+            //TODO actually use bootstrap icon
+            gap_src: {src: '../tree/media/circle-fill_icon.svg'},
+
+            drag: false,
+
+            all_coords: [] as string[],
+            
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalGapMatchModel';
+    static view_name = 'GraphicalGapMatchView';
+}
+
+export class GraphicalGapMatchView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    protected icon_stack: HTMLImageElement;
+    protected icon_stack_container: HTMLDivElement;
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        this.container.style.display = 'flex';
+        this.container.style.position = 'relative';
+        this.container.style.justifyContent = "start";
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
+        this.container.style.width = `${width}px`;
+        
+        //TODO move
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        
+        //TODO replace with flex
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+        this.change_gap_src();
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `${this.model.get('background_src').height}px`;
+        this.background.style.width = `${this.model.get('background_src').width}px`;
+        this.background.style.border='1px solid black';
+        this.background.style.display='inline';
+        this.background.style.zIndex='1';
+
+        //TODO move
+        this.icon_stack_container = document.createElement('div');
+        this.icon_stack_container.style.display = 'inline-flex';
+        this.icon_stack_container.style.height = `${this.model.get('background_src').height}px`;
+        this.icon_stack_container.style.width = `${this.model.get('icon_src').width}px`;
+        
+        this.icon_stack_container.style.alignItems = 'center';
+        this.icon_stack_container.style.justifyContent = 'center';
+        this.icon_stack_container.ondragstart = this.change_on_dragstart.bind(this);
+        this.icon_stack_container.ondrop = this.reset_drag.bind(this);
+        this.icon_stack_container.style.zIndex = '3';
+        
+        this.icon_stack = document.createElement('img');
+        this.icon_stack.src = this.model.get('icon_src').src;
+        this.icon_stack.style.height = `${this.model.get('icon_src').height}px`;
+        this.icon_stack.style.width = `${this.model.get('icon_src').width}px`;
+        //needed to not show 'block' as cursor icon 
+        this.icon_stack.classList.add('draggable');
+        this.icon_stack_container.append(this.icon_stack);
+        
+        this.container.append(this.background, this.icon_stack_container);
+    }
+
+    change_gap_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_gap_element(coords);
+        });
+    }
+
+    create_gap_element(coords:string) {
+        const gap = document.createElement('img');
+        gap.src = this.model.get('gap_src').src;
+
+        //TODO for now leave gaps as big as icons
+        gap.style.height = `${this.model.get('icon_src').height}px`;
+        gap.style.width =  `${this.model.get('icon_src').width}px`;
+
+        gap.style.zIndex='2';
+        gap.style.display = 'inline';
+        gap.style.position='absolute';
+        gap.style.opacity = '30%'
+        
+        //TODO use given coords as center
+        const [x ,y] = coords.split(',');
+        console.log('Creating Gap for coords: ' + x + ' ' + y);
+        gap.style.left = `${x}px`;
+        gap.style.top = `${y}px`;
+        gap.classList.add('filterable');
+        
+        gap.addEventListener('dragover', (event) => 
+            {
+                //if valid element is being dragged, allow cursor to show dropzone 
+                if (this.model.get("drag")) {
+                    event.preventDefault();
+                }
+                //only add hovered once
+                if (!gap.classList.contains("hovered")) {
+                    gap.src = this.model.get('icon_src').src;
+                    gap.classList.add('hovered');
+                }
+            })
+        gap.addEventListener('dragleave', () =>
+            {
+                //do nothing if icon isn't being dragged or if gap is already filled 
+                if (!this.model.get('drag') || gap.classList.contains('selected')) {
+                    gap.classList.remove('hovered');
+                    return
+                }
+
+                gap.classList.remove('hovered');
+                gap.src = this.model.get('gap_src').src;
+            })
+        gap.ondrop = this.change_on_drop.bind(this);
+
+        
+        this.container.append(gap);
+    }
+
+    reset_drag() {
+        this.model.set('drag', false);
+        this.model.save_changes();
+    }
+
+    change_on_dragstart() {
+        this.model.set('drag', true);
+        this.model.save_changes();
+    }
+
+    change_on_drop(event:DragEvent) {
+        event.preventDefault();
+        if (!this.model.get('drag')) {
+            return;
+        }
+
+        const hovered = this.container.getElementsByClassName('hovered');
+        //check whether drag ended over a gap
+        if (!hovered || hovered.length == 0) {
+            this.reset_drag();
+            return;
+        }
+        
+        //already filled
+        if (hovered[0].classList.contains('selected')) {
+            //could remove value here
+        }
+        const selected_gap = hovered[0] as HTMLImageElement; 
+        
+        selected_gap.src = this.model.get('icon_src').src;
+        selected_gap.classList.add('selected');
+        selected_gap.classList.remove('hovered');
+        
+        const x = selected_gap.style.left.replace('px', '');
+        const y = selected_gap.style.top.replace('px', '');
+        this.update_value(`${x},${y}`);
+    }
+
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+        const index = current_coords.indexOf(selected_point);
+        if (index >= 0) { 
+            console.log(`Selected gap was already added to value: ${selected_point}`);
+        } else {
+            current_coords.push(selected_point);
+            console.log("Updated value " + `${current_coords}`);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+        }
+        this.reset_drag();
+    }
+
+    reset_value() {
+        console.log("Resetting value and all gaps");
+        this.model.set('value', []);
+        this.model.set('drag', false);
+        this.model.save_changes();
+
+        const gaps = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < gaps.length; i++) {
+            let gap = gaps[i] as HTMLImageElement;
+            gap.src = this.model.get('gap_src').src;
+            gap.classList.remove('selected');
+        }
+    }
 
 }
