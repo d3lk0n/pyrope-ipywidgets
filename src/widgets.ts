@@ -455,10 +455,17 @@ export class ExerciseView extends PyRopeWidgetView {
             }
         }, host);
 
+        // When the template was set as the hosts inner HTML it got parsed. All
+        // HTML special characters that would cause an invalid HTML subtree are
+        // replace by their entity names (e.g. <: &lt;, >: &gt;, &: &amp;). To
+        // decode these entity names a textarea element is used.
+        // See: https://stackoverflow.com/questions/7394748/whats-the-right-way-to-decode-a-string-that-has-special-html-entities-in-it#7394787
+        const decoder = document.createElement('textarea');
+        decoder.innerHTML = host.innerHTML;
         // Clear the host div and render the template with a markdown
         // renderer.
         const template_model = PyRopeWidgetView.renderMimeRegistry.createModel(
-            {'data': {'text/markdown': host.innerHTML}}
+            {'data': {'text/markdown': decoder.value}}
         );
         host.replaceChildren();
         await this.render_mime_model(template_model, host);
