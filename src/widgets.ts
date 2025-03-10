@@ -1,5 +1,4 @@
 
-import 'bootstrap-icons/font/bootstrap-icons.css';
 import {
     DOMWidgetModel,
     DOMWidgetView,
@@ -13,6 +12,7 @@ import {
     IRenderMimeRegistry,
 } from '@jupyterlab/rendermime';
 import { Widget } from '@lumino/widgets';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 import '../css/widgets.css';
 import { MODULE_NAME, MODULE_VERSION } from './version';
@@ -1678,6 +1678,7 @@ export class GraphicalAssociateView extends InputWidgetView {
         this.reset_line()
     }
 
+    //TODO use number representation of coords everywhere
     find_icon(coords:{x:number,y:number}) {
         const icons = this.container.getElementsByClassName('filterable');
         
@@ -1846,10 +1847,14 @@ export class GraphicalGapMatchView extends InputWidgetView {
         
         gap.addEventListener('dragover', (event) => 
             {
-                //if valid element is being dragged, allow cursor to show dropzone 
-                if (this.model.get("drag")) {
-                    event.preventDefault();
+                //if ínvalid element is being dragged prevent dropzone 
+                if (!this.model.get("drag")) {
+                    return;
                 }
+
+                //show dropzone
+                event.preventDefault();
+                
                 //only add hovered once
                 if (!gap.classList.contains("hovered")) {
                     gap.src = this.model.get('icon_src').src;
@@ -1936,6 +1941,243 @@ export class GraphicalGapMatchView extends InputWidgetView {
             let gap = gaps[i] as HTMLImageElement;
             gap.src = this.model.get('gap_src').src;
             gap.classList.remove('selected');
+        }
+    }
+
+}
+
+export class GraphicalPositionObjectModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalSelectPointModel.model_name,
+            _view_name: GraphicalSelectPointModel.view_name,
+
+            //TODO default white bg
+            background_src: '',
+            
+            //TODO default icon
+            icon_src: '',
+
+            drag: false,
+            drag_offset: {} as {x:number, y:number},
+
+            value: [] as string[]
+        }
+    }
+
+    static model_name = 'GraphicalPositionObjectModel';
+    static view_name = 'GraphicalPositionObjectView';
+}
+
+export class GraphicalPositionObjectView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    protected icon: HTMLImageElement;
+    protected icon_container: HTMLDivElement;
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        this.container.style.display = 'flex';
+        this.container.style.position = 'relative';
+        this.container.style.justifyContent = "start";
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
+        this.container.style.width = `${width}px`;
+        this.container.style.zIndex = '3';
+
+        //TODO better to just reset?, only if dragged
+        this.container.ondragend = this.change_on_dragend.bind(this);
+        this.container.ondragover = this.change_on_dragover.bind(this);
+        
+        //TODO move
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        
+        //TODO replace with flex
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `${this.model.get('background_src').height}px`;
+        this.background.style.width = `${this.model.get('background_src').width}px`;
+        this.background.style.border='1px solid black';
+        this.background.style.display='inline';
+        this.background.style.zIndex='1';
+        
+        //TODO move
+        this.icon_container = document.createElement('div');
+        this.icon_container.style.display = 'inline-flex';
+        this.icon_container.style.height = `${this.model.get('background_src').height}px`;
+        this.icon_container.style.width = `${this.model.get('icon_src').width}px`;
+        
+        this.icon_container.style.alignItems = 'center';
+        this.icon_container.style.justifyContent = 'center';
+        this.icon_container.ondragover = this.change_on_dragover.bind(this);
+        
+        this.icon = document.createElement('img');
+        this.icon.src = this.model.get('icon_src').src;
+        this.icon.style.height = `${this.model.get('icon_src').height}px`;
+        this.icon.style.width = `${this.model.get('icon_src').width}px`;
+        //needed to not show 'blocked' as cursor icon 
+        this.icon.classList.add('draggable');
+        this.icon.onmousedown = this.change_on_mousedown.bind(this);
+        //TODO what happens first?
+        this.icon.ondrop = this.reset_drag.bind(this);
+        this.icon_container.append(this.icon);
+        
+        this.container.append(this.background, this.icon_container);
+    }
+
+    //TODO naming, its not really moving, also is icon
+    //TODO move here
+    create_moving_image() {
+        /* const moving_image = document.createElement('img');
+        moving_image.src = this.model.get('icon_src').src;
+        moving_image.style.height = `${this.model.get('icon_src').height}px`;
+        moving_image.style.width = `${this.model.get('icon_src').width}px`;
+        moving_image.style.zIndex = '2';
+        moving_image.style.position = 'absolute';
+        moving_image.hidden = true;
+        moving_image.classList.add('filterable');
+        //TODO only have to append when saving?
+        this.container.append(moving_image)*/
+        //override current one, so prior saved image isn't being hidden on reset drag
+        ///this.moving_image = moving_image;
+    }
+
+    change_on_mousedown(event:MouseEvent) {
+        this.model.set('drag',true);
+
+        const rect = this.icon.getBoundingClientRect();
+        
+        //TODO use this everywhere dragging icons
+        //use offset when starting drag, to smoothen out drop 
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+        const offset = {x:x, y:y}
+        
+        this.model.set('drag_offset', offset)
+        this.model.save_changes();
+        console.log('Starting drag');
+    }
+
+    change_on_dragover(event:DragEvent) {
+        if (this.model.get('drag')) {
+            event.preventDefault();
+        }
+    } 
+
+    change_on_dragend(event:DragEvent) {
+        if (this.model.get('drag')) {
+            const rect = this.background.getBoundingClientRect();
+            
+            //take offset of where image is grabbed into consideration
+            //to match drawn icon with dragged icon
+            const width_offset = this.model.get('drag_offset').x;
+            const height_offset = this.model.get('drag_offset').y;
+            const x = Number((event.clientX - rect.left - width_offset).toFixed(0));
+            const y = Number((event.clientY - rect.top - height_offset).toFixed(0));
+
+            const icon_width_offset = parseInt(this.model.get('icon_src').width)/2;
+            const icon_height_offset = parseInt(this.model.get('icon_src').height)/2;
+            //TODO remove unnecessary parseInts everywhere
+            const bg_width = parseInt(this.model.get('background_src').width);
+            const bg_height = parseInt(this.model.get('background_src').height);
+            
+            //could also move icon as close as possible to border, if it would overlap with background border
+            //currently if icon would be outside of background OR overlap with the border, its not being saved
+            //TODO still using upper left corner of img, better:
+            //if(x < 0 + icon_width_offset || x > bg_width - icon_width_offset || y < 0 + icon_height_offset || y > bg_height - icon_height_offset) {
+            if(x < 0 || x > bg_width - (icon_width_offset*2) || y < 0 || y > bg_height - (icon_height_offset*2)) {
+                console.log('Dragged element was outside of background')
+
+                this.reset_drag();
+                return
+            }
+
+            //TODO move up
+            const moving_image = document.createElement('img');
+            moving_image.src = this.model.get('icon_src').src;
+            moving_image.style.height = `${this.model.get('icon_src').height}px`;
+            moving_image.style.width = `${this.model.get('icon_src').width}px`;
+            moving_image.style.zIndex = '2';
+            moving_image.style.position = 'absolute';
+            moving_image.classList.add('filterable');
+            moving_image.style.left = `${x}px`;
+            moving_image.style.top = `${y}px`;
+            moving_image.ondragover = this.change_on_dragover.bind(this);
+            this.container.append(moving_image)
+            
+            console.log(`Moving image to ${x},${y}`);
+            const point = `${x},${y}`;
+            this.update_value(point);
+        }
+    }
+
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+        const index = current_coords.indexOf(selected_point);
+        if (index >= 0) { 
+            console.log(`Selected position was already added to value: ${selected_point}`);
+        } else {
+            current_coords.push(selected_point);
+            console.log("Updated values " + `${current_coords}`);
+            this.model.set('value', current_coords);
+            this.model.save_changes();
+        }
+        this.reset_drag();
+    }
+
+    
+    reset_drag() {
+        this.model.set('drag', false);
+        this.model.save_changes();
+    }
+
+    reset_value() {
+        console.log("Resetting all values");
+        this.model.set('value', []);
+        this.model.set('drag', false);
+        this.model.save_changes();
+
+        const moving_images = this.container.getElementsByClassName('filterable');
+        for (let i = 0, len = moving_images.length; i < len; i++) {
+            moving_images[0].remove();
         }
     }
 

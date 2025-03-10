@@ -519,3 +519,13 @@ class GraphicalGapMatch(InputWidget):
     all_coords = List([]).tag(sync=True)
     
     value = List([]).tag(sync=True)
+    
+class GraphicalPositionObject(InputWidget):
+    
+    _model_name = Unicode('GraphicalPositionObjectModel').tag(sync=True)
+    _view_name = Unicode('GraphicalPositionObjectView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+
+    value = List([]).tag(sync=True)
