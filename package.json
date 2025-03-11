@@ -1,6 +1,6 @@
 {
   "name": "pyrope-ipywidgets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The JupyterLab extension providing Jupyter widgets for the e-assessment system PyRope.",
   "keywords": [
     "jupyter",

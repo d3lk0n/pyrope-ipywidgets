@@ -13,7 +13,7 @@ dependencies = [
     "ipywidgets>=8.0.0",
     "pyrope @ git+https://github.com/PyRope-E-Assessment/pyrope.git@0.1.X",
 ]
-version = "0.1.0"
+version = "0.1.1"
 
 [tool.hatch.metadata]
 allow-direct-references = true
