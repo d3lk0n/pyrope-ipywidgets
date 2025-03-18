@@ -942,9 +942,6 @@ export class TextAreaView extends TextView {
 }
 
 
-//if necessary
-//TODO create general Graphical Model/View
-//TODO move to graphical_widgets ?
 export class GraphicalHotspotModel extends InputWidgetModel {
     defaults() {
         return {
@@ -958,7 +955,6 @@ export class GraphicalHotspotModel extends InputWidgetModel {
             background_src: '',
             
             //TODO default icon
-            //TODO resize icon with bg?
             icon_src: '',
             
             all_coords: [] as string[],
@@ -973,7 +969,6 @@ export class GraphicalHotspotModel extends InputWidgetModel {
 
 export class GraphicalHotspotView extends InputWidgetView {
 
-    //TODO dollar sign?
     protected container: HTMLDivElement;
     protected background: HTMLImageElement;
     
@@ -984,7 +979,6 @@ export class GraphicalHotspotView extends InputWidgetView {
     }
     render() {
 
-        //TODO response type should be basyType of identifier
         this.container = document.createElement('div');
         
         //TODO move to .css
@@ -997,13 +991,6 @@ export class GraphicalHotspotView extends InputWidgetView {
         
         this.change_background_src();
         this.change_icon_src();
-        
-        //alternative for determining url
-        /*this.model.widget_manager.resolveUrl(this.model.get('background_src')).then(resolvedUrl => {
-            console.log('Typescript BG URL: \n')
-            console.log(resolvedUrl)
-            //this.background.src = resolvedUrl;
-        });*/
 
         this.el.append(this.container);
 
@@ -1094,14 +1081,6 @@ export class GraphicalHotspotView extends InputWidgetView {
         }
        
     }
-
-    //TODO test
-    change_valid() {
-        this.change_class_name(this.background);
-    }
-    
-    //TODO validate method?
-
     
 
 }
@@ -1829,7 +1808,6 @@ export class GraphicalGapMatchView extends InputWidgetView {
         const gap = document.createElement('img');
         gap.src = this.model.get('gap_src').src;
 
-        //TODO for now leave gaps as big as icons
         gap.style.height = `${this.model.get('icon_src').height}px`;
         gap.style.width =  `${this.model.get('icon_src').width}px`;
 
@@ -1996,7 +1974,6 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         this.container.style.width = `${width}px`;
         this.container.style.zIndex = '3';
 
-        //TODO better to just reset?, only if dragged
         this.container.ondragend = this.change_on_dragend.bind(this);
         this.container.ondragover = this.change_on_dragover.bind(this);
         
@@ -2053,31 +2030,14 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         this.icon.src = this.model.get('icon_src').src;
         this.icon.style.height = `${this.model.get('icon_src').height}px`;
         this.icon.style.width = `${this.model.get('icon_src').width}px`;
+        
         //needed to not show 'blocked' as cursor icon 
         this.icon.classList.add('draggable');
         this.icon.onmousedown = this.change_on_mousedown.bind(this);
-        //TODO what happens first?
         this.icon.ondrop = this.reset_drag.bind(this);
         this.icon_container.append(this.icon);
         
         this.container.append(this.background, this.icon_container);
-    }
-
-    //TODO naming, its not really moving, also is icon
-    //TODO move here
-    create_moving_image() {
-        /* const moving_image = document.createElement('img');
-        moving_image.src = this.model.get('icon_src').src;
-        moving_image.style.height = `${this.model.get('icon_src').height}px`;
-        moving_image.style.width = `${this.model.get('icon_src').width}px`;
-        moving_image.style.zIndex = '2';
-        moving_image.style.position = 'absolute';
-        moving_image.hidden = true;
-        moving_image.classList.add('filterable');
-        //TODO only have to append when saving?
-        this.container.append(moving_image)*/
-        //override current one, so prior saved image isn't being hidden on reset drag
-        ///this.moving_image = moving_image;
     }
 
     change_on_mousedown(event:MouseEvent) {
