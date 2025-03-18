@@ -971,6 +971,8 @@ export class GraphicalHotspotView extends InputWidgetView {
 
     protected container: HTMLDivElement;
     protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
     
     init_callbacks() {
         super.init_callbacks();
@@ -982,7 +984,7 @@ export class GraphicalHotspotView extends InputWidgetView {
         this.container = document.createElement('div');
         
         //TODO move to .css
-        this.container.style.display = 'inline-block';
+        this.container.style.display = 'block';
         this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
@@ -992,7 +994,30 @@ export class GraphicalHotspotView extends InputWidgetView {
         this.change_background_src();
         this.change_icon_src();
 
-        this.el.append(this.container);
+        //TODO move
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        
+        //TODO replace with flex
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+
+        this.el.append(this.container, this.reset_container);
 
         super.render();
     }
@@ -1043,7 +1068,7 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         //TODO if needed
         //coord_element.style.borderRadius = '50%'
-        icon.classList.add('pyrope');
+        icon.classList.add('pyrope', 'filterable');
 
         icon.onclick = this.change_on_clicked.bind(this, icon);
 
@@ -1082,6 +1107,17 @@ export class GraphicalHotspotView extends InputWidgetView {
        
     }
     
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        const icons = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+            icon.style.opacity = '40%';
+        }
+    }
 
 }
 
@@ -1264,6 +1300,8 @@ export class GraphicalOrderModel extends InputWidgetModel {
 export class GraphicalOrderView extends InputWidgetView {
 
     protected container: HTMLDivElement;
+    protected reset_container: HTMLDivElement;
+    protected reset_button: HTMLButtonElement;
     protected background: HTMLImageElement;
     
     init_callbacks() {
@@ -1277,7 +1315,7 @@ export class GraphicalOrderView extends InputWidgetView {
         this.container = document.createElement('div');
         
         //TODO move to .css
-        this.container.style.display = 'inline-block';
+        this.container.style.display = 'block';
         this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
@@ -1287,7 +1325,30 @@ export class GraphicalOrderView extends InputWidgetView {
         this.change_background_src();
         this.change_icon_src();
         
-        this.el.append(this.container);
+        //TODO move
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        
+        //TODO replace with flex
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+
+        this.el.append(this.container, this.reset_container);
 
         super.render();
     }
@@ -1411,6 +1472,14 @@ export class GraphicalOrderView extends InputWidgetView {
             }
         }
     }
+
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        this.update_all_indeces();
+    }
 }
 
 export class GraphicalAssociateModel extends InputWidgetModel {
@@ -1441,6 +1510,8 @@ export class GraphicalAssociateModel extends InputWidgetModel {
 export class GraphicalAssociateView extends InputWidgetView {
 
     protected container: HTMLDivElement;
+    protected reset_container: HTMLDivElement;
+    protected reset_button: HTMLButtonElement;
     protected background: HTMLImageElement;
     protected bg_canvas: HTMLCanvasElement;
     protected bg_context: CanvasRenderingContext2D;
@@ -1455,11 +1526,10 @@ export class GraphicalAssociateView extends InputWidgetView {
     }
     render() {
 
-        //TODO response type should be basyType of identifier
         this.container = document.createElement('div');
         
         //TODO move to .css
-        this.container.style.display = 'inline-block';
+        this.container.style.display = 'block';
         this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
@@ -1488,10 +1558,33 @@ export class GraphicalAssociateView extends InputWidgetView {
         this.container.append(this.bg_canvas, this.drawing_canvas);
         this.container.onmouseleave = this.reset_line.bind(this);
 
+        //TODO move
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.display = 'inline-flex';
+        this.reset_container.style.position = 'relative';
+        this.reset_container.style.height = `30px`;
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        
+        //TODO replace with flex
+        this.reset_container.style.left = this.container.style.left;
+        this.reset_container.style.top = this.container.style.bottom;
+        this.reset_container.style.alignItems = 'center';
+        this.reset_container.style.justifyContent = 'center';
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.classList.add('pyrope', 'ifield');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.style.border='1px solid black';
+        this.reset_button.style.textAlign = 'center';
+        this.reset_button.style.height = '25px';
+        this.reset_button.textContent = 'Reset';
+        
+        this.reset_container.append(this.reset_button);
+
         this.change_background_src();
         this.change_icon_src();
         
-        this.el.append(this.container);
+        this.el.append(this.container, this.reset_container);
 
         super.render();
     }
@@ -1577,7 +1670,7 @@ export class GraphicalAssociateView extends InputWidgetView {
     reset_line() {
         if(this.model.get('tracked_coords')) {
             this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);    
-            this.model.set('tracked_coords', undefined);
+            this.model.set('tracked_coords', {});
         }
 
         this.redraw_bg();
@@ -1675,6 +1768,16 @@ export class GraphicalAssociateView extends InputWidgetView {
 
         return undefined;    
     }
+
+    reset_value() {
+        console.log("Resetting value and all lines");
+        this.model.set('value', []);
+        this.model.set('tracked_coords', {});
+        this.model.save_changes();
+
+        this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);    
+        this.bg_context.clearRect(0,0,this.bg_canvas.width,this.bg_canvas.height);
+    }
     
     //TODO validate method?
 }
@@ -1751,6 +1854,7 @@ export class GraphicalGapMatchView extends InputWidgetView {
         this.reset_button.style.border='1px solid black';
         this.reset_button.style.textAlign = 'center';
         this.reset_button.style.height = '25px';
+        //TODO increase Font based on bg
         this.reset_button.textContent = 'Reset';
         
         this.reset_container.append(this.reset_button);
