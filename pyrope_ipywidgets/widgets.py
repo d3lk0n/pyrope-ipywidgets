@@ -1,7 +1,9 @@
 
 from IPython import get_ipython
 from ipywidgets import Button, DOMWidget, Output, widget_serialization
+import numpy
 from pyrope.messages import ChangeWidgetAttribute, Submit
+import sympy
 from traitlets import (
     Any, Bool, default, Dict, Enum, Float, Instance, Int, List, observe, Tuple,
     TraitError, Unicode, validate
@@ -94,6 +96,12 @@ class PyRopeWidget(DOMWidget):
     @staticmethod
     def create_mime_bundle(obj):
         format = get_ipython().display_formatter.format
+        # So that 1D and 2D numpy arrays are rendered in LaTeX.
+        if isinstance(obj, numpy.ndarray):
+            try:
+                obj = sympy.Matrix(obj)
+            except NotImplementedError:
+                pass
         bundle = format(obj)
         if isinstance(obj, str):
             # Otherwise strings are rendered with '' or "".
