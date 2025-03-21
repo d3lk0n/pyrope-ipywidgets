@@ -148,6 +148,9 @@ class Exercise(PyRopeWidget):
         sync=True, **widget_serialization
     )
     hints = List(default_value=[], trait=Unicode()).tag(sync=False)
+    insert_solutions_btn = Instance(Button, read_only=True).tag(
+        sync=True, **widget_serialization
+    )
     max_total_score = Float(None, allow_none=True).tag(sync=False)
     ofields = Dict({}, key_trait=Unicode()).tag(sync=False)
     submit_btn = Instance(SubmitButton, read_only=True).tag(
@@ -188,6 +191,12 @@ class Exercise(PyRopeWidget):
     def observe_hints(self, change):
         self._displayed_hints = []
         self.hint_btn.hints = change['new']
+
+    @default('insert_solutions_btn')
+    def default_insert_solutions_btn(self):
+        btn = Button(description='Insert Solutions')
+        btn.on_click(lambda _: self.insert_solutions())
+        return btn
 
     @observe('ofields')
     def observe_ofields(self, change):
@@ -243,6 +252,7 @@ class Exercise(PyRopeWidget):
     def disable(self):
         self.clear_debug_btn.disabled = True
         self.hint_btn.disabled = True
+        self.insert_solutions_btn.disabled = True
         self.submit_btn.disabled = True
         for widget in self.widgets.values():
             widget.disabled = True
@@ -253,6 +263,11 @@ class Exercise(PyRopeWidget):
         max_score = str(max_score) if max_score is not None else '?'
         if not score == max_score == '?':
             self._total_score = f'Total Score: {score}/{max_score}'
+
+    def insert_solutions(self):
+        for widget in self.widgets.values():
+            if widget.solution is not None:
+                widget.value = widget.solution
 
     def render_preamble(self, template):
         preamble = HTMLTemplateFormatter.format(template, **self.ofields)

@@ -193,6 +193,9 @@ export class ExerciseModel extends PyRopeWidgetModel {
             // Ipywidgets button model which renders the next hint if there is
             // one.
             hint_btn: ButtonModel,
+            // Ipywidgets button model which inserts solutions into widgets if
+            // there is a solution.
+            insert_solutions_btn: ButtonModel,
             // Ipywidgets button model for submitting an exercise.
             submit_btn: ButtonModel,
             // Ipywidgets output model for showing standard output and errors
@@ -212,6 +215,7 @@ export class ExerciseModel extends PyRopeWidgetModel {
         clear_debug_btn: { deserialize: unpack_models },
         debug_output: { deserialize: unpack_models },
         hint_btn: { deserialize: unpack_models },
+        insert_solutions_btn: { deserialize: unpack_models },
         submit_btn: { deserialize: unpack_models },
         user_output: { deserialize: unpack_models },
         widgets: { deserialize: unpack_models },
@@ -417,13 +421,18 @@ export class ExerciseView extends PyRopeWidgetView {
         );
         this._button_area.append(submit_btn_view.el, hint_btn_view.el);
 
-        // The button for clearing the debug messages is only shown if the
-        // debug mode is on.
+        // The button for clearing the debug messages and the button for
+        // inserting solutions are only shown if the debug mode is on.
         if (this.model.get('debug')) {
             const clear_debug_btn_view = await this.create_widget_view(
                 this.model.get('clear_debug_btn')
             );
-            this._button_area.append(clear_debug_btn_view.el);
+            const insert_solutions_btn_view = await this.create_widget_view(
+                this.model.get('insert_solutions_btn')
+            );
+            this._button_area.append(
+                clear_debug_btn_view.el, insert_solutions_btn_view.el
+            );
         }
     }
 
