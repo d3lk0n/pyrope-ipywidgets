@@ -297,6 +297,7 @@ class InputWidget(PyRopeWidget):
     title = Unicode('').tag(sync=True)
     valid = Bool(None, allow_none=True).tag(sync=True)
     value = Any(None).tag(sync=True)
+    value_string = Unicode('').tag(sync=False)
 
     def __init__(self, id, notification_callback, **kwargs):
         self.id = id
@@ -423,8 +424,13 @@ class Text(InputWidget):
     _view_name = Unicode('TextView').tag(sync=True)
 
     placeholder = Unicode('').tag(sync=True)
-    value = Unicode('').tag(sync=True)
+    value = Any(None).tag(sync=False)
+    value_string = Unicode('').tag(sync=True)
     width = Int(20).tag(sync=True)
+
+    @observe('value_string')
+    def observe_value_string(self, change):
+        self.value = change['new']
 
 
 class TextArea(Text):

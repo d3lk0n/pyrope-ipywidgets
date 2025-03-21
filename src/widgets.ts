@@ -1232,7 +1232,7 @@ export class TextModel extends InputWidgetModel {
             // empty.
             placeholder: '',
             // The current value of the text input.
-            value: '',
+            value_string: '',
             // The width of the text input. The value refers to the amount of
             // characters that fit into the text input.
             width: 20,
@@ -1254,6 +1254,7 @@ export class TextView extends InputWidgetView {
     init_callbacks() {
         super.init_callbacks();
         this.model.on('change:placeholder', this.change_placeholder, this);
+        this.model.on('change:value_string', this.change_value_string, this);
         this.model.on('change:width', this.change_width, this);
     }
 
@@ -1285,7 +1286,7 @@ export class TextView extends InputWidgetView {
 
     // Update the model when the value of the text input element changes.
     change_on_input() {
-        this.model.set('value', this._text.value);
+        this.model.set('value_string', this._text.value);
         this.model.save_changes();
     }
 
@@ -1301,8 +1302,8 @@ export class TextView extends InputWidgetView {
         this.change_class_name(this._text);
     }
 
-    change_value() {
-         this._text.value = this.model.get('value');
+    change_value_string() {
+         this._text.value = this.model.get('value_string');
     }
 
     change_width() {
