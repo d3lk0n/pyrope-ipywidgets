@@ -1,4 +1,6 @@
 
+from fractions import Fraction
+
 from IPython import get_ipython
 from ipywidgets import Button, DOMWidget, Output, widget_serialization
 import numpy
@@ -102,6 +104,12 @@ class PyRopeWidget(DOMWidget):
                 obj = sympy.Matrix(obj)
             except NotImplementedError:
                 pass
+        # Render fractions in LaTeX.
+        if isinstance(obj, Fraction):
+            obj = sympy.Rational(obj)
+        # Cast polynomials to expressions for a nicer representation.
+        if isinstance(obj, sympy.Poly):
+            obj = obj.as_expr()
         bundle = format(obj)
         if isinstance(obj, str):
             # Otherwise strings are rendered with '' or "".
