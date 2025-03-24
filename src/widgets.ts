@@ -1212,7 +1212,26 @@ export class GraphicalSelectPointView extends InputWidgetView {
 
     create_icon_element(event:MouseEvent) {
 
-        //TODO only render part inside of container
+        //bounding rectangle of container == image for calculating offset to 
+        const rect = this.container.getBoundingClientRect();
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+        
+        const icon_width_offset = parseInt(this.model.get('icon_src').width)/2;
+        const icon_height_offset = parseInt(this.model.get('icon_src').height)/2;
+        const bg_width = parseInt(this.model.get('background_src').width);
+        const bg_height = parseInt(this.model.get('background_src').height);
+        
+        //could also move icon as close as possible to border, if it would overlap with background border
+        //currently if icon would be outside of background OR overlap with the border, its not being saved
+        //TODO still using upper left corner of img, better:
+        if(x < 0 + icon_width_offset || x > bg_width - icon_width_offset || y < 0 + icon_height_offset || y > bg_height - icon_height_offset) {
+        //if(x < 0 || x > bg_width - (icon_width_offset*2) || y < 0 || y > bg_height - (icon_height_offset*2)) {
+            console.log('Selected point would create an overlap of the icon and background border')
+            
+            return
+        }
+
         const icon = document.createElement('img');
         icon.src = this.model.get('icon_src').src;
         icon.style.height = `${this.model.get('icon_src').height}px`;
@@ -1223,14 +1242,9 @@ export class GraphicalSelectPointView extends InputWidgetView {
         icon.style.display = 'inline';
         icon.style.position='absolute';
         
-        //bounding rectangle of container == image for calculating offset to 
-        const rect = this.container.getBoundingClientRect();
-        const x = Number((event.clientX - rect.left).toFixed(0));
-        const y = Number((event.clientY - rect.top).toFixed(0));
-        
         //using upper left corner of icon to indicate where clicked
-        icon.style.left = `${x}px`;
-        icon.style.top = `${y}px`;
+        icon.style.left = `${x-icon_width_offset}px`;
+        icon.style.top = `${y-icon_width_offset}px`;
 
         //TODO better classname
         icon.classList.add('pyrope', 'removable');
