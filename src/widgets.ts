@@ -957,9 +957,9 @@ export class GraphicalHotspotModel extends InputWidgetModel {
             //TODO default icon
             icon_src: '',
             
-            all_coords: [] as string[],
+            all_coords: [],
 
-            value: [] as string[]
+            value: []
         }
     }
 
@@ -1081,30 +1081,23 @@ export class GraphicalHotspotView extends InputWidgetView {
         const x = icon.style.left.replace('px', '')
         const y = icon.style.top.replace('px', '')
 
-        const coords = `${x},${y}`
-        const current_coords = this.model.get('value') as string[]
-        const index = current_coords.indexOf(coords)
-        if (index >= 0) {
-            //icon was already clicked, remove from tracked list and reset opacity 
+        const current_coords = this.model.get('value') as string[];
+        const coords = `${x},${y}`;
+
+        let new_coords: string[];
+
+        if (current_coords.indexOf(coords) >= 0) {
+            new_coords = current_coords.filter(c => c !== coords);
             icon.style.opacity = '40%';
-            //TODO only for debugging for now
-            console.log(`Before: ${this.model.get('value')}`);
-            console.log(`${coords} will be removed from tracked`);
-            current_coords.splice(index, 1);
-            this.model.set('value', current_coords);
-            this.model.save_changes();
-            console.log(`After: ${this.model.get('value')}`);
+            console.log(`${coords} removed`);
         } else {
-            //icon not tracked yet, add to tracked list and set full opacity 
+            new_coords = [...current_coords, coords];
             icon.style.opacity = '100%';
-            console.log(`Before: ${this.model.get('value')}`);
-            console.log(`${coords} will be added to tracked`);
-            current_coords.push(coords);
-            this.model.set('value', current_coords);
-            this.model.save_changes();
-            console.log(`After: ${this.model.get('value')}`);
+            console.log(`${coords} added`);
         }
-       
+
+        this.model.set('value', new_coords);
+        this.model.save_changes();
     }
     
     reset_value() {
@@ -1129,14 +1122,11 @@ export class GraphicalSelectPointModel extends InputWidgetModel {
             _model_name: GraphicalSelectPointModel.model_name,
             _view_name: GraphicalSelectPointModel.view_name,
 
-            //TODO default white bg
             background_src: '',
             
-            //TODO default icon
-            //TODO resize icon with bg?
             icon_src: '',
             
-            value: [] as string[]
+            value: []
         }
     }
 
@@ -1255,17 +1245,19 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.update_value(selected_point);
 
     }
-
     update_value(selected_point:string) {
         const current_coords = this.model.get('value') as string[];
-        const index = current_coords.indexOf(selected_point);
-        if (index >= 0) { 
+
+        if (current_coords.indexOf(selected_point) >= 0) { 
             console.log(`Selected point was already added to value: ${selected_point}`);
         } else {
-            current_coords.push(selected_point);
-            console.log("Updated value " + `${current_coords}`);
-            this.model.set('value', current_coords);
-            this.model.save_changes();
+            let new_coords: string[];
+            
+            new_coords = [...current_coords, selected_point];
+            console.log(`${selected_point} added`);
+            
+            this.model.set('value', new_coords);
+            this.model.save_changes();    
         }
     }
 
@@ -1301,9 +1293,9 @@ export class GraphicalOrderModel extends InputWidgetModel {
             icon_src: '',
 
             //coords by x,y
-            all_coords: [] as string[],
+            all_coords: [],
 
-            value: [] as string[]
+            value: []
         }
     }
 
@@ -1320,8 +1312,7 @@ export class GraphicalOrderView extends InputWidgetView {
     
     init_callbacks() {
         super.init_callbacks();
-        this.model.on('change:background_src', this.change_background_src, this);
-        this.model.on('change:icon_src', this.change_icon_src, this);
+        
     }
 
     render() {
@@ -1438,28 +1429,29 @@ export class GraphicalOrderView extends InputWidgetView {
 
         const x = icon.style.left.replace('px', '')
         const y = icon.style.top.replace('px', '')
-
         const coords = `${x},${y}`
         const current_coords = this.model.get('value') as string[]
+
+        let new_coords: string[];
+    
         const index = current_coords.indexOf(coords)
         if (index >= 0) {
             //icon was already clicked, remove from tracked list 
-            //TODO only for debugging for now
             console.log(`Before: ${this.model.get('value')}`);
             console.log(`${coords} will be removed from tracked`);
-            current_coords.splice(index, 1);
-            this.model.set('value', current_coords);
-            this.model.save_changes();
-            console.log(`After: ${this.model.get('value')}`);
+            new_coords = current_coords.splice(index, 1);
+        
         } else {
             //icon not tracked yet, add to tracked list 
             console.log(`Before: ${this.model.get('value')}`);
             console.log(`${coords} will be added to tracked`);
             current_coords.push(coords);
-            this.model.set('value', current_coords);
-            this.model.save_changes();
-            console.log(`After: ${this.model.get('value')}`);
+            new_coords = current_coords;
         }
+
+        this.model.set('value', new_coords);
+        this.model.save_changes();
+        console.log(`After: ${this.model.get('value')}`);
 
         //reset indeces according to order in tracked values
         this.update_all_indeces();
@@ -1511,9 +1503,9 @@ export class GraphicalAssociateModel extends InputWidgetModel {
             
             tracked_coords: {} as {x:number, y:number},
 
-            all_coords: [] as string[],
+            all_coords: [],
 
-            value: [] as string[]
+            value: []
         }
     }
 
@@ -1535,8 +1527,7 @@ export class GraphicalAssociateView extends InputWidgetView {
 
     init_callbacks() {
         super.init_callbacks();
-        this.model.on('change:background_src', this.change_background_src, this);
-        this.model.on('change:icon_src', this.change_icon_src, this);
+        
     }
     render() {
 
@@ -1746,17 +1737,20 @@ export class GraphicalAssociateView extends InputWidgetView {
             ? all_tracked.indexOf(`${x1},${y1},${x2},${y2}`)
             : all_tracked.indexOf(`${x2},${y2},${x1},${y1}`);
 
+            let new_coords: string[];    
+
             if (index >= 0) {
                 console.log('Icon pair was already tracked, removing pair from value and resetting line.');
-                all_tracked.splice(index, 1);
-                this.model.set('value', all_tracked);
-                this.model.save_changes();
+                new_coords = all_tracked.splice(index, 1);
             } else {
                 console.log('Icon pair was not tracked yet, adding pair to value and resetting line.');
                 all_tracked.push(`${x1},${y1},${x2},${y2}`);
-                this.model.set('value', all_tracked);
-                this.model.save_changes();
+                new_coords = all_tracked;
             }
+
+            this.model.set('value', new_coords);
+            this.model.save_changes();
+
             console.log(`After: ${this.model.get('value')}`);
         }
 
@@ -1815,9 +1809,9 @@ export class GraphicalGapMatchModel extends InputWidgetModel {
 
             drag: false,
 
-            all_coords: [] as string[],
+            all_coords: [],
             
-            value: [] as string[]
+            value: []
         }
     }
 
@@ -2014,13 +2008,16 @@ export class GraphicalGapMatchView extends InputWidgetView {
 
     update_value(selected_point:string) {
         const current_coords = this.model.get('value') as string[];
-        const index = current_coords.indexOf(selected_point);
-        if (index >= 0) { 
+    
+        if (current_coords.indexOf(selected_point) >= 0) {
             console.log(`Selected gap was already added to value: ${selected_point}`);
         } else {
+            let new_coords: string[];
+
             current_coords.push(selected_point);
-            console.log("Updated value " + `${current_coords}`);
-            this.model.set('value', current_coords);
+            new_coords = current_coords;
+            console.log("Updated value " + `${new_coords}`);
+            this.model.set('value', new_coords);
             this.model.save_changes();
         }
         this.reset_drag();
@@ -2059,7 +2056,7 @@ export class GraphicalPositionObjectModel extends InputWidgetModel {
             drag: false,
             drag_offset: {} as {x:number, y:number},
 
-            value: [] as string[]
+            value: [] 
         }
     }
 
@@ -2229,13 +2226,16 @@ export class GraphicalPositionObjectView extends InputWidgetView {
 
     update_value(selected_point:string) {
         const current_coords = this.model.get('value') as string[];
-        const index = current_coords.indexOf(selected_point);
-        if (index >= 0) { 
+
+        if (current_coords.indexOf(selected_point) >= 0) {
             console.log(`Selected position was already added to value: ${selected_point}`);
         } else {
+            let new_coords: string[];
+
             current_coords.push(selected_point);
-            console.log("Updated values " + `${current_coords}`);
-            this.model.set('value', current_coords);
+            new_coords = current_coords;
+            console.log("Updated values " + `${new_coords}`);
+            this.model.set('value', new_coords);
             this.model.save_changes();
         }
         this.reset_drag();
