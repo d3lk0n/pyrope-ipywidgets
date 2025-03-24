@@ -439,9 +439,13 @@ class Text(InputWidget):
     _view_name = Unicode('TextView').tag(sync=True)
 
     placeholder = Unicode('').tag(sync=True)
-    value = Any(None).tag(sync=False)
+    value = Any('').tag(sync=False)
     value_string = Unicode('').tag(sync=True)
     width = Int(20).tag(sync=True)
+
+    @property
+    def is_empty(self):
+        return self.value_string == self.__class__.value_string.default_value
 
     @observe('value_string')
     def observe_value_string(self, change):
