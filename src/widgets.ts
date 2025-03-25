@@ -1432,23 +1432,21 @@ export class GraphicalOrderView extends InputWidgetView {
         const coords = `${x},${y}`
         const current_coords = this.model.get('value') as string[]
 
+        console.log(`Before: ${this.model.get('value')}`);
         let new_coords: string[];
-    
-        const index = current_coords.indexOf(coords)
+        new_coords = [...current_coords]
+
+        const index = new_coords.indexOf(coords)
+        
         if (index >= 0) {
             //icon was already clicked, remove from tracked list 
-            console.log(`Before: ${this.model.get('value')}`);
             console.log(`${coords} will be removed from tracked`);
-            new_coords = current_coords.splice(index, 1);
-        
+            new_coords.splice(index, 1);
         } else {
             //icon not tracked yet, add to tracked list 
-            console.log(`Before: ${this.model.get('value')}`);
             console.log(`${coords} will be added to tracked`);
-            current_coords.push(coords);
-            new_coords = current_coords;
+            new_coords.push(coords);
         }
-
         this.model.set('value', new_coords);
         this.model.save_changes();
         console.log(`After: ${this.model.get('value')}`);
@@ -1738,14 +1736,14 @@ export class GraphicalAssociateView extends InputWidgetView {
             : all_tracked.indexOf(`${x2},${y2},${x1},${y1}`);
 
             let new_coords: string[];    
+            new_coords = [...all_tracked]
 
             if (index >= 0) {
                 console.log('Icon pair was already tracked, removing pair from value and resetting line.');
-                new_coords = all_tracked.splice(index, 1);
+                new_coords.splice(index, 1);
             } else {
                 console.log('Icon pair was not tracked yet, adding pair to value and resetting line.');
-                all_tracked.push(`${x1},${y1},${x2},${y2}`);
-                new_coords = all_tracked;
+                new_coords.push(`${x1},${y1},${x2},${y2}`);
             }
 
             this.model.set('value', new_coords);
@@ -2014,8 +2012,7 @@ export class GraphicalGapMatchView extends InputWidgetView {
         } else {
             let new_coords: string[];
 
-            current_coords.push(selected_point);
-            new_coords = current_coords;
+            new_coords = [...current_coords, selected_point]
             console.log("Updated value " + `${new_coords}`);
             this.model.set('value', new_coords);
             this.model.save_changes();
@@ -2232,8 +2229,7 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         } else {
             let new_coords: string[];
 
-            current_coords.push(selected_point);
-            new_coords = current_coords;
+            new_coords = [...current_coords, selected_point];
             console.log("Updated values " + `${new_coords}`);
             this.model.set('value', new_coords);
             this.model.save_changes();
