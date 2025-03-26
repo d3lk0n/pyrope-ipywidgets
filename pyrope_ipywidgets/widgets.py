@@ -267,7 +267,10 @@ class Exercise(PyRopeWidget):
     def insert_solutions(self):
         for widget in self.widgets.values():
             if widget.solution is not None:
-                widget.value = widget.solution
+                try:
+                    widget.value = widget.solution
+                except TraitError:
+                    pass
 
     def render_preamble(self, template):
         preamble = HTMLTemplateFormatter.format(template, **self.ofields)
