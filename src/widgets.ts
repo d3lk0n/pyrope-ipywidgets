@@ -186,6 +186,8 @@ export class ExerciseModel extends PyRopeWidgetModel {
 
             // Ipywidgets button model which clears all debug messages.
             clear_debug_btn: ButtonModel,
+            // Ipywidgets button model which clears all inputs.
+            clear_inputs_btn: ButtonModel,
             // Boolean flag indicating the debug mode of an exercise.
             debug: false,
             // Ipywidgets output model for showing debug messages.
@@ -213,6 +215,7 @@ export class ExerciseModel extends PyRopeWidgetModel {
     static serializers: ISerializers = {
         ...DOMWidgetModel.serializers,
         clear_debug_btn: { deserialize: unpack_models },
+        clear_inputs_btn: { deserialize: unpack_models },
         debug_output: { deserialize: unpack_models },
         hint_btn: { deserialize: unpack_models },
         insert_solutions_btn: { deserialize: unpack_models },
@@ -411,15 +414,20 @@ export class ExerciseView extends PyRopeWidgetView {
         // Clear the button area in case it was already rendered.
         this._button_area.replaceChildren();
 
-        // Create the submit and hint button and append them to the button
-        // container. These buttons are always rendered.
+        // Create the submit, hint and clear inputs button and append them to
+        // the button container. These buttons are always rendered.
         const submit_btn_view = await this.create_widget_view(
             this.model.get('submit_btn')
         );
         const hint_btn_view = await this.create_widget_view(
             this.model.get('hint_btn')
         );
-        this._button_area.append(submit_btn_view.el, hint_btn_view.el);
+        const clear_inputs_btn_view = await this.create_widget_view(
+            this.model.get('clear_inputs_btn')
+        );
+        this._button_area.append(
+            submit_btn_view.el, hint_btn_view.el, clear_inputs_btn_view.el
+        );
 
         // The button for clearing the debug messages and the button for
         // inserting solutions are only shown if the debug mode is on.
@@ -896,10 +904,11 @@ export class DropdownView extends InputWidgetView {
     // Notice that the (i + 1)th label is selected because of the additional
     // default option.
     change_index() {
-        const i = this.model.get('_index');
-        if (i !== null) {
-            this._select.options[i + 1].selected = true;
+        let i = this.model.get('_index');
+        if (i === null) {
+            i = -1;
         }
+        this._select.options[i + 1].selected = true;
     }
 
     // Render the labels inside the select element.
@@ -1011,6 +1020,10 @@ export class RadioButtonsView extends InputWidgetView {
         const i = this.model.get('_index');
         if (i !== null) {
             this._radio_buttons[i].checked = true;
+        } else {
+            for (let radio_button of this._radio_buttons) {
+                radio_button.checked = false;
+            }
         }
     }
 

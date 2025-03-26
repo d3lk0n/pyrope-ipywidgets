@@ -140,6 +140,9 @@ class Exercise(PyRopeWidget):
     clear_debug_btn = Instance(Button, read_only=True).tag(
         sync=True, **widget_serialization
     )
+    clear_inputs_btn = Instance(Button, read_only=True).tag(
+        sync=True, **widget_serialization
+    )
     debug = Bool(False).tag(sync=True)
     debug_output = Instance(DebugOutput, read_only=True).tag(
         sync=True, **widget_serialization
@@ -169,6 +172,12 @@ class Exercise(PyRopeWidget):
     def default_clear_debug_btn(self):
         btn = Button(description='Clear Debug')
         btn.on_click(lambda _: self.debug_output.clear_output())
+        return btn
+
+    @default('clear_inputs_btn')
+    def default_clear_inputs_btn(self):
+        btn = Button(description='Clear Inputs')
+        btn.on_click(lambda _: self.clear_inputs())
         return btn
 
     @default('debug_output')
@@ -249,9 +258,14 @@ class Exercise(PyRopeWidget):
                 )
         return widgets
 
+    def clear_inputs(self):
+        for widget in self.widgets.values():
+            widget.value = widget.__class__.value.default_value
+
     def disable(self):
         self.clear_debug_btn.disabled = True
         self.hint_btn.disabled = True
+        self.clear_inputs_btn = True
         self.insert_solutions_btn.disabled = True
         self.submit_btn.disabled = True
         for widget in self.widgets.values():
