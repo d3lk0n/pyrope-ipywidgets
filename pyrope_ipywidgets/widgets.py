@@ -8,7 +8,7 @@ from pyrope.messages import ChangeWidgetAttribute, Submit
 import sympy
 from traitlets import (
     Any, Bool, default, Dict, Enum, Float, Instance, Int, List, observe, Tuple,
-    TraitError, Unicode, validate
+    TraitError, Unicode, Union, validate
 )
 
 from ._frontend import module_name, module_version
@@ -58,7 +58,10 @@ class HintButton(Button):
 
     _index = Int(0).tag(sync=False)
 
-    hints = List(default_value=[], trait=Unicode()).tag(sync=False)
+    hints = Union([
+        Dict(key_trait=Unicode(), value_trait=List(trait=Unicode())),
+        List(trait=Unicode())
+    ], default_value=[]).tag(sync=False)
 
     def __init__(self, **kwargs):
         super().__init__(description='No Hints', disabled=True, **kwargs)
@@ -66,7 +69,7 @@ class HintButton(Button):
     @observe('hints')
     def observe_hints(self, change):
         self._index = 0
-        if len(change['new']) == 0:
+        if len(change['new']) == 0 or isinstance(change['new'], dict):
             self.description = 'No Hints'
             self.disabled = True
         else:
@@ -150,7 +153,10 @@ class Exercise(PyRopeWidget):
     hint_btn = Instance(HintButton, read_only=True).tag(
         sync=True, **widget_serialization
     )
-    hints = List(default_value=[], trait=Unicode()).tag(sync=False)
+    hints = Union([
+        Dict(key_trait=Unicode(), value_trait=List(trait=Unicode())),
+        List(trait=Unicode())
+    ], default_value=[]).tag(sync=False)
     insert_solutions_btn = Instance(Button, read_only=True).tag(
         sync=True, **widget_serialization
     )
@@ -322,6 +328,7 @@ class InputWidget(PyRopeWidget):
     disabled = Bool(False).tag(sync=True)
     displayed_max_score = Float(None, allow_none=True).tag(sync=False)
     displayed_score = Float(None, allow_none=True).tag(sync=False)
+    ifield_name = Unicode('').tag(sync=False)
     info = Unicode('').tag(sync=False)
     show_max_score = Bool(False).tag(sync=False)
     show_score = Bool(False).tag(sync=False)
