@@ -31,6 +31,9 @@ class DebugOutput(Output):
 
 class SubmitButton(Button):
 
+    # State of the submission button. If users try to submit an exercise with
+    # invalid or empty input fields, they are warned and the description text
+    # of this button changes.
     state = Enum(('initial', 'unfinished'), default_value='initial').tag(
         sync=False
     )
@@ -85,6 +88,8 @@ class HintButton(Button):
         return hint
 
 
+# Base class of PyRope widgets. The main purpose of this class is to inherit
+# the notification callback.
 class PyRopeWidget(DOMWidget):
 
     _model_module = Unicode(module_name).tag(sync=True)
@@ -166,6 +171,10 @@ class Exercise(PyRopeWidget):
         sync=True, **widget_serialization
     )
     total_score = Float(None, allow_none=True).tag(sync=False)
+    # Some methods of an exercise like scores() or feedback() are called after
+    # the exercise is submitted. Since this exercise widget does not know where
+    # to display print statements or error tracebacks after the submission,
+    # they are redirected to the user_output.
     user_output = Instance(Output, read_only=True).tag(
         sync=True, **widget_serialization
     )
@@ -213,6 +222,8 @@ class Exercise(PyRopeWidget):
         btn.on_click(lambda _: self.insert_solutions())
         return btn
 
+    # Create a mime bundle for every output field so that the frontend side
+    # can decide which mime type to use to render an output field.
     @observe('ofields')
     def observe_ofields(self, change):
         mime_bundles = {}
@@ -315,6 +326,8 @@ class Exercise(PyRopeWidget):
         self.display_total_score()
 
 
+# Base class for all concrete input widgets that can be inserted into an
+# exercise.
 class InputWidget(PyRopeWidget):
 
     _model_name = Unicode('InputWidgetModel').tag(sync=True)
