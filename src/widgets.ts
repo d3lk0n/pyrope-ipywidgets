@@ -1626,8 +1626,6 @@ export class GraphicalOrderView extends InputWidgetView {
             //differentiate elements in order
             const solution_elements = cleaned.split(", ").map(s => s.trim());
             
-            //TODO check for layout with other span
-    
             for (let i=0; i<all_containter.length+0; i++) {
                 const container = all_containter[i] as HTMLDivElement
                 let x = parseInt(container.style.left.replace('px', ''));
@@ -1643,6 +1641,7 @@ export class GraphicalOrderView extends InputWidgetView {
 
                     solution_text.classList.add('graphical', 'show', 'solution_text')
                     console.log(`Creating Span with index ${index}`)
+                    solution_text.style.marginLeft = '3px'
         
                     container.appendChild(solution_text)
                 }
@@ -1658,10 +1657,8 @@ export class GraphicalAssociateModel extends InputWidgetModel {
             _model_name: GraphicalAssociateModel.model_name,
             _view_name: GraphicalAssociateModel.view_name,
 
-            //TODO default white bg
             background_src: '',
             
-            //TODO default icon
             icon_src: '',
             
             tracked_coords: {} as {x:number, y:number},
@@ -1808,7 +1805,6 @@ export class GraphicalAssociateView extends InputWidgetView {
         icon.style.height = `${this.model.get('icon_src').height}px`;
         icon.style.width =  `${this.model.get('icon_src').width}px`;
 
-        //TODO extra modification for reshaping icons (e.g. circles)
         icon.style.zIndex='4';
         icon.style.display = 'inline';
         icon.style.position='absolute';
@@ -1908,7 +1904,6 @@ export class GraphicalAssociateView extends InputWidgetView {
         } else {
             console.log('Adding selected icons to value.');
 
-            //TODO using id would be a lot easier
             //compare whether these icons are already tracked
             const all_tracked = this.model.get('value') as string[];
 
@@ -1982,7 +1977,7 @@ export class GraphicalAssociateView extends InputWidgetView {
         
         const solution_canvas = this.container.getElementsByClassName('solution_canvas');
 
-        //destroy canvas on toggle_off, TODO save draw state
+        //destroy canvas on toggle_off, saving draw state would be preferrable
         if(solution_canvas.length > 0) {
             console.log('Deleting Canvas')
             solution_canvas[0].remove();
@@ -2099,7 +2094,6 @@ export class GraphicalGapMatchView extends InputWidgetView {
         this.reset_button.style.border='1px solid black';
         this.reset_button.style.textAlign = 'center';
         this.reset_button.style.height = '25px';
-        //TODO increase Font based on bg
         this.reset_button.textContent = 'Reset';
         
         this.reset_container.append(this.reset_button);
@@ -2463,7 +2457,6 @@ export class GraphicalPositionObjectView extends InputWidgetView {
 
         const rect = this.icon.getBoundingClientRect();
         
-        //TODO use this everywhere dragging icons
         //use offset when starting drag, to smoothen out drop 
         const x = Number((event.clientX - rect.left).toFixed(0));
         const y = Number((event.clientY - rect.top).toFixed(0));
