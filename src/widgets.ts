@@ -971,8 +971,9 @@ export class GraphicalHotspotView extends InputWidgetView {
     protected container: HTMLDivElement;
     protected background: HTMLImageElement;
     protected reset_button: HTMLButtonElement;
-    protected reset_container: HTMLDivElement;
-    
+    protected reset_container: HTMLDivElement;    
+    protected bound_handlers = new Map()
+
     init_callbacks() {
         super.init_callbacks();
         this.model.on('change:background_src', this.change_background_src, this);
@@ -1026,7 +1027,18 @@ export class GraphicalHotspotView extends InputWidgetView {
         this.change_class_name(this.reset_button);
 
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const elems = this.container.getElementsByClassName('disableable');
+            for (let i=0; i<elems.length; i++) {
+                const elem = elems[i] as HTMLImageElement;
+                const bound_handler = this.bound_handlers.get(elem);
+                if (bound_handler) {
+                    elem.removeEventListener("click", bound_handler);
+                    //not really necessary, clean up in case of further map edits
+                    this.bound_handlers.delete(elem);
+                }
+            }
+        }
     }
 
     change_background_src() {
@@ -1075,14 +1087,16 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         icon.classList.add('graphical', 'filterable', 'solution', 'disableable');
 
-        icon.onclick = this.change_on_clicked.bind(this, icon);
+        const bound_handler = this.change_on_clicked.bind(this, icon);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(icon, bound_handler);
+        icon.addEventListener("click", bound_handler);
 
         this.container.append(icon);
     }
 
     change_on_clicked(icon : HTMLImageElement) {
 
-        //TODO use identifier (in dict instead?)
         const x = icon.style.left.replace('px', '')
         const y = icon.style.top.replace('px', '')
 
@@ -1173,6 +1187,8 @@ export class GraphicalSelectPointView extends InputWidgetView {
     protected reset_button: HTMLButtonElement;
     protected reset_container: HTMLDivElement;
     
+    protected bound_handlers = new Map();
+
     init_callbacks() {
         super.init_callbacks();
         this.model.on('change:background_src', this.change_background_src, this);
@@ -1188,7 +1204,7 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.container.style.border='1px solid black';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
-        this.container.classList.add('pyrope', 'graphical');
+        this.container.classList.add('pyrope', 'graphical', 'disableable');
         
         this.reset_container = document.createElement('div');
         this.reset_container.style.display = 'inline-flex';
@@ -1211,7 +1227,11 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.reset_container.append(this.reset_button);
         
         this.change_background_src();
-        this.container.onclick = this.create_icon_element.bind(this);
+
+        const bound_handler = this.create_icon_element.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.container, bound_handler);
+        this.container.addEventListener("click", bound_handler);
 
         this.el.append(this.container, this.reset_container);
 
@@ -1220,8 +1240,16 @@ export class GraphicalSelectPointView extends InputWidgetView {
 
     change_disabled() {
         this.change_class_name(this.reset_button);
+
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const bound_handler = this.bound_handlers.get(this.container);
+            if (bound_handler) {
+                this.container.removeEventListener("click", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.container);
+            }
+       }
     }
 
     change_background_src() {
@@ -1381,6 +1409,8 @@ export class GraphicalOrderView extends InputWidgetView {
     protected reset_button: HTMLButtonElement;
     protected background: HTMLImageElement;
     
+    protected bound_handlers = new Map();
+    
     init_callbacks() {
         super.init_callbacks();
     }
@@ -1429,8 +1459,20 @@ export class GraphicalOrderView extends InputWidgetView {
 
     change_disabled() {
         this.change_class_name(this.reset_button);
+
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const elems = this.container.getElementsByClassName('disableable');
+            for (let i=0; i<elems.length; i++) {
+                const elem = elems[i] as HTMLDivElement;
+                const bound_handler = this.bound_handlers.get(elem);
+                if (bound_handler) {
+                    elem.removeEventListener("click", bound_handler);
+                    //not really necessary, clean up in case of further map edits
+                    this.bound_handlers.delete(elem);
+                }
+            }
+        }
     }
 
     change_background_src() {
@@ -1489,9 +1531,12 @@ export class GraphicalOrderView extends InputWidgetView {
     
         icon.append(icon_img, icon_span);
         
-        icon.classList.add('graphical', 'solution');
+        icon.classList.add('graphical', 'solution', 'disableable');
 
-        icon.onclick = this.change_on_clicked.bind(this, icon);
+        const bound_handler = this.change_on_clicked.bind(this, icon);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(icon, bound_handler);
+        icon.addEventListener("click", bound_handler);
 
         this.container.append(icon);
     }
@@ -1642,6 +1687,7 @@ export class GraphicalAssociateView extends InputWidgetView {
     protected drawing_canvas: HTMLCanvasElement;
     protected drawing_context: CanvasRenderingContext2D;
     
+    protected bound_handlers = new Map();
 
     init_callbacks() {
         super.init_callbacks();
@@ -1674,9 +1720,15 @@ export class GraphicalAssociateView extends InputWidgetView {
         this.drawing_canvas.width = this.model.get('background_src').width;
         this.drawing_context = this.drawing_canvas.getContext('2d')!;
         
-        this.drawing_canvas.onmousedown = this.start_draw_line.bind(this);
+        //only disable start of line draw since other events on their own won't do anything
+        const bound_handler = this.start_draw_line.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.drawing_canvas, bound_handler);
+        this.drawing_canvas.addEventListener("mousedown", bound_handler);
+
         this.drawing_canvas.onmouseup = this.end_draw_line.bind(this);
         this.drawing_canvas.onmousemove = this.move_line.bind(this);
+        this.drawing_canvas.classList.add('disableable');
         
         this.container.append(this.bg_canvas, this.drawing_canvas);
         this.container.onmouseleave = this.reset_line.bind(this);
@@ -1714,8 +1766,16 @@ export class GraphicalAssociateView extends InputWidgetView {
 
     change_disabled() {
         this.change_class_name(this.reset_button);
+
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const bound_handler = this.bound_handlers.get(this.drawing_canvas);
+            if (bound_handler) {
+                this.drawing_canvas.removeEventListener("mousedown", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.drawing_canvas);
+            }
+       }
     }
 
     change_background_src() {
@@ -2002,6 +2062,8 @@ export class GraphicalGapMatchView extends InputWidgetView {
     protected icon_stack: HTMLImageElement;
     protected icon_stack_container: HTMLDivElement;
 
+    protected bound_handlers = new Map();
+
     init_callbacks() {
         super.init_callbacks();
         this.model.on('change:background_src', this.change_background_src, this);
@@ -2052,8 +2114,16 @@ export class GraphicalGapMatchView extends InputWidgetView {
 
     change_disabled() {
         this.change_class_name(this.reset_button);
+
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const bound_handler = this.bound_handlers.get(this.icon_stack_container);
+            if (bound_handler) {
+                this.icon_stack_container.removeEventListener("dragstart", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.icon_stack_container);
+            }
+       }
     }
 
     change_background_src() {
@@ -2073,7 +2143,13 @@ export class GraphicalGapMatchView extends InputWidgetView {
         
         this.icon_stack_container.style.alignItems = 'center';
         this.icon_stack_container.style.justifyContent = 'center';
-        this.icon_stack_container.ondragstart = this.change_on_dragstart.bind(this);
+        
+        //only disable drag start since other events on their own won't do anything
+        const bound_handler = this.change_on_dragstart.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.icon_stack_container, bound_handler);
+        this.icon_stack_container.addEventListener("dragstart", bound_handler);
+
         this.icon_stack_container.ondrop = this.reset_drag.bind(this);
         this.icon_stack_container.style.zIndex = '3';
         
@@ -2084,6 +2160,7 @@ export class GraphicalGapMatchView extends InputWidgetView {
         //needed to not show 'block' as cursor icon 
         this.icon_stack.classList.add('draggable');
         this.icon_stack_container.append(this.icon_stack);
+        this.icon_stack_container.classList.add('disableable');
         
         this.container.append(this.background, this.icon_stack_container);
     }
@@ -2276,6 +2353,8 @@ export class GraphicalPositionObjectView extends InputWidgetView {
     protected icon: HTMLImageElement;
     protected icon_container: HTMLDivElement;
 
+    protected bound_handlers = new Map();
+
     init_callbacks() {
         super.init_callbacks();
         this.model.on('change:background_src', this.change_background_src, this);
@@ -2328,8 +2407,16 @@ export class GraphicalPositionObjectView extends InputWidgetView {
 
     change_disabled() {
         this.change_class_name(this.reset_button);
+
         const disabled = this.model.get('disabled');
-        if (disabled) this.container.replaceWith(this.container.cloneNode(true));   
+        if (disabled) {
+            const bound_handler = this.bound_handlers.get(this.icon);
+            if (bound_handler) {
+                this.icon.removeEventListener("mousedown", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.icon);
+            }
+       }
     }
 
     change_background_src() {
@@ -2357,8 +2444,14 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         this.icon.style.width = `${this.model.get('icon_src').width}px`;
         
         //needed to not show 'blocked' as cursor icon 
-        this.icon.classList.add('draggable');
-        this.icon.onmousedown = this.change_on_mousedown.bind(this);
+        this.icon.classList.add('draggable', 'disableable');
+
+        //only disable mouse down on icon since other events on their own won't do anything
+        const bound_handler = this.change_on_mousedown.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.icon, bound_handler);
+        this.icon.addEventListener("mousedown", bound_handler);
+
         this.icon.ondrop = this.reset_drag.bind(this);
         this.icon_container.append(this.icon);
         
