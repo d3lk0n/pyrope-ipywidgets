@@ -4,6 +4,7 @@
     --blue: #1476fb;
     --light-blue: #b8e2f4;
     --red: #ff0000;
+    --green: #00ff00;
     --light-red: #ffcccb;
     --grey: #8b8b8b;
     --light-grey: #efefef;
@@ -130,6 +131,16 @@ button.pyrope.ifield span.show span {
 /* GraphicalHotspot widget. TODO move everything here*/
 input[type="graphical"].pyrope {
 	border: 1px solid var(--grey);
+}
+
+div.graphical span.graphical.solution_text.hide {
+    display: none !important;
+}
+
+div.graphical span.graphical.solution_text.show,
+div.graphical div.graphical.solution.show,
+div.graphical img.graphical.solution.show {
+    outline: solid 2px var(--green);
 }
 
 /* Last paragraph does not need margin so that the preamble is vertically
