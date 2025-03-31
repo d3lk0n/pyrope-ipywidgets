@@ -223,7 +223,6 @@ class Exercise(PyRopeIPyWidget):
         self.hint_btn.disabled = True
         self.submit_btn.disabled = True
         for widget in self.widgets.values():
-            #TODO use to disable graphical widget inputs
             widget.disabled = True
 
     def display_total_score(self):
@@ -463,14 +462,11 @@ class TextArea(Text):
     def default_width(self):
         return 50
 
-#TODO
-#general class for graphical interactions?
 class GraphicalHotspot(InputWidget):
     
     _model_name = Unicode('GraphicalHotspotModel').tag(sync=True)
     _view_name = Unicode('GraphicalHotspotView').tag(sync=True)
     
-    #TODO sync might be unnecassary
     background_src = Any(None).tag(sync=True)
     icon_src = Any(None).tag(sync=True)
     all_coords = List([]).tag(sync=True)

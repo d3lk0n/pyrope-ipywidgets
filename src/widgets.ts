@@ -566,7 +566,6 @@ export class CheckboxView extends InputWidgetView {
     }
 
     change_disabled() {
-        //TODO use this method to disable HTML Elements (+ disable functions mb?)
         this.change_class_name(this._checkbox);
     }
 
@@ -984,37 +983,21 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         this.container = document.createElement('div');
         
-        //TODO move to .css
-        this.container.style.display = 'block';
-        this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
-        
-        this.container.classList.add('pyrope', 'graphical');
+        this.container.classList.add('hotspot', 'graphical');
         
         this.change_background_src();
         this.change_icon_src();
 
-        //TODO move
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        
-        //TODO replace with flex
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
 
@@ -1024,10 +1007,10 @@ export class GraphicalHotspotView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+
             const elems = this.container.getElementsByClassName('disableable');
             for (let i=0; i<elems.length; i++) {
                 const elem = elems[i] as HTMLImageElement;
@@ -1044,14 +1027,7 @@ export class GraphicalHotspotView extends InputWidgetView {
     change_background_src() {
         this.background = document.createElement('img');
         this.background.src = this.model.get('background_src').src;
-        this.background.style.height = `100%`;
-        this.background.style.width = `100%`;
-        
-        this.background.style.display = 'inline'
-        this.background.style.border='1px solid black';
-        this.background.style.position='absolute';
-        this.background.style.zIndex='1';
-        this.background.classList.add('pyrope');        
+        this.background.classList.add('background');        
 
         this.container.append(this.background);
     }
@@ -1071,21 +1047,13 @@ export class GraphicalHotspotView extends InputWidgetView {
         
         icon.style.height = `${this.model.get('icon_src').height}px`;
         icon.style.width =  `${this.model.get('icon_src').width}px`;
-
-        //TODO extra modification for reshaping icons (e.g. circles)
-        icon.style.zIndex='2';
-        icon.style.display = 'inline';
-        icon.style.position='absolute';
         
-        //TODO use given coords as center
-        //TODO would require not being able to place image near edges (test case in python) 
         const [x ,y] = coords.split(',');
         console.log('Creating Icon for coords: ' + x + ' ' + y);
         icon.style.left = `${x}px`;
         icon.style.top = `${y}px`;
-        icon.style.opacity = '40%';
-
-        icon.classList.add('graphical', 'filterable', 'solution', 'disableable');
+        
+        icon.classList.add('graphical', 'filterable', 'solution', 'disableable', 'icon', 'unselected');
 
         const bound_handler = this.change_on_clicked.bind(this, icon);
         //store reference to function call, to disable later
@@ -1097,8 +1065,8 @@ export class GraphicalHotspotView extends InputWidgetView {
 
     change_on_clicked(icon : HTMLImageElement) {
 
-        const x = icon.style.left.replace('px', '')
-        const y = icon.style.top.replace('px', '')
+        const x = icon.style.left.replace('px', '');
+        const y = icon.style.top.replace('px', '');
 
         const current_coords = this.model.get('value') as string[];
         const coords = `${x},${y}`;
@@ -1107,13 +1075,13 @@ export class GraphicalHotspotView extends InputWidgetView {
 
         if (current_coords.indexOf(coords) >= 0) {
             new_coords = current_coords.filter(c => c !== coords);
-            icon.style.opacity = '40%';
             console.log(`${coords} removed`);
         } else {
             new_coords = [...current_coords, coords];
-            icon.style.opacity = '100%';
             console.log(`${coords} added`);
         }
+
+        icon.classList.toggle('unselected');
 
         this.model.set('value', new_coords);
         this.model.save_changes();
@@ -1127,7 +1095,7 @@ export class GraphicalHotspotView extends InputWidgetView {
         const icons = this.container.getElementsByClassName('filterable');
         for (let i = 0; i < icons.length; i++) {
             let icon = icons[i] as HTMLImageElement;
-            icon.style.opacity = '40%';
+            icon.classList.add('unselected');
         }
     }
 
@@ -1140,7 +1108,7 @@ export class GraphicalHotspotView extends InputWidgetView {
         const icons = this.container.getElementsByClassName('solution');
         
         const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
-        console.log(`Got solution ${solution}`)
+        console.log(`Got solution ${solution}`);
         if (!solution) return;
 
         for (let i = 0; i < icons.length; i++) {
@@ -1150,7 +1118,7 @@ export class GraphicalHotspotView extends InputWidgetView {
             const y = icon.style.top.replace('px', '');
             const coords = `${x},${y}`;
             
-            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`)
+            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`);
 
             if(solution.includes(coords)) {
                 icon.classList.toggle('show');   
@@ -1181,7 +1149,6 @@ export class GraphicalSelectPointModel extends InputWidgetModel {
 
 export class GraphicalSelectPointView extends InputWidgetView {
 
-    //TODO dollar sign?
     protected container: HTMLDivElement;
     protected background: HTMLImageElement;
     protected reset_button: HTMLButtonElement;
@@ -1194,38 +1161,24 @@ export class GraphicalSelectPointView extends InputWidgetView {
         this.model.on('change:background_src', this.change_background_src, this);
     }
 
-    //TODO optionally render areas (for debugging/testing)
     render() {
         this.container = document.createElement('div');
         
-        //TODO move to .css
-        this.container.style.display = 'block';
-        this.container.style.position = 'relative';
-        this.container.style.border='1px solid black';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
-        this.container.classList.add('pyrope', 'graphical', 'disableable');
+        this.container.classList.add('graphical', 'disableable', 'selectpoint');
         
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
-        
+
         this.change_background_src();
 
         const bound_handler = this.create_icon_element.bind(this);
@@ -1239,10 +1192,10 @@ export class GraphicalSelectPointView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+
             const bound_handler = this.bound_handlers.get(this.container);
             if (bound_handler) {
                 this.container.removeEventListener("click", bound_handler);
@@ -1255,15 +1208,9 @@ export class GraphicalSelectPointView extends InputWidgetView {
     change_background_src() {
         this.background = document.createElement('img');
         this.background.src = this.model.get('background_src').src;
-        this.background.style.height = `100%`;
-        this.background.style.width = `100%`;
-        
-        //this.background.style.display = 'inline';
-        this.background.style.border='1px solid black';
-        this.background.style.position='absolute';
-        this.background.style.zIndex='1';
-        
-        this.container.append(this.background)
+
+        this.background.classList.add('background');
+        this.container.append(this.background);
     }
 
     create_icon_element(event:MouseEvent) {
@@ -1281,29 +1228,26 @@ export class GraphicalSelectPointView extends InputWidgetView {
         //could also move icon as close as possible to border, if it would overlap with background border
         //currently if icon would be outside of background OR overlap with the border, its not being saved
         if(x < 0 + icon_width_offset || x > bg_width - icon_width_offset || y < 0 + icon_height_offset || y > bg_height - icon_height_offset) {
-            console.log('Selected point would create an overlap of the icon and background border')
+            console.log('Selected point would create an overlap of the icon and background border');
             
-            return
+            return;
         }
 
         const icon = document.createElement('img');
         icon.src = this.model.get('icon_src').src;
         icon.style.height = `${this.model.get('icon_src').height}px`;
         icon.style.width =  `${this.model.get('icon_src').width}px`;
-
-        icon.style.zIndex='2';
-        icon.style.display = 'inline';
-        icon.style.position='absolute';
         
         //using center of icon to track where clicked
         icon.style.left = `${x-icon_width_offset}px`;
         icon.style.top = `${y-icon_width_offset}px`;
 
-        icon.classList.add('pyrope', 'removable');
+        icon.classList.add('removable', 'icon');
         
         this.container.append(icon);
         
-        const selected_point = `${x-icon_width_offset},${y-icon_width_offset}`;
+        //use clicked position as center of icon and as saved value
+        const selected_point = `${x},${y}`;
         this.update_value(selected_point);
 
     }
@@ -1344,14 +1288,12 @@ export class GraphicalSelectPointView extends InputWidgetView {
         if (!solution) return;
 
         const areas = this.container.getElementsByClassName('solution');
-        console.log(`Found ${areas}`)
+        console.log(`Found ${areas}`);
 
         //either toggle solution areas or create them 
         if(areas.length > 0) {
             for (let i=0; i<areas.length; i++) {
-                const area = areas[i] as HTMLDivElement;
-                console.log(`Toggling show`)
-        
+                const area = areas[i] as HTMLDivElement;        
                 area.classList.toggle('show');
             } 
         } else {
@@ -1362,31 +1304,26 @@ export class GraphicalSelectPointView extends InputWidgetView {
             solution_areas.forEach(elem => {
                 const [x1,y1,x2,y2] = elem.split(',');
                 const sol = document.createElement('div');
-                sol.style.position = 'absolute'
-                sol.style.left = `${x1}px`
-                sol.style.top = `${y1}px`
-                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`
-                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`
-                sol.style.zIndex = '3'
+                sol.style.left = `${x1}px`;
+                sol.style.top = `${y1}px`;
+                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`;
+                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`;
                 console.log(`Creating area ${x1}, ${y1}, ${x2}, ${y2}`)
         
-                sol.classList.add('graphical', 'solution', 'show');
-                this.container.appendChild(sol)
+                sol.classList.add('graphical', 'solution', 'solution-area', 'show');
+                this.container.appendChild(sol);
             })
         }
     }
 }
 
-//TODO lock all graphical interactions on submit
-//-> remove all on clicks
-//-> gray out all buttons
 export class GraphicalOrderModel extends InputWidgetModel {
     defaults() {
         return {
             ...super.defaults(),
             
-            _model_name: GraphicalHotspotModel.model_name,
-            _view_name: GraphicalHotspotModel.view_name,
+            _model_name: GraphicalOrderModel.model_name,
+            _view_name: GraphicalOrderModel.view_name,
 
             background_src: '',
             
@@ -1418,37 +1355,22 @@ export class GraphicalOrderView extends InputWidgetView {
     render() {
         this.container = document.createElement('div');
         
-        //TODO move to .css
-        this.container.style.display = 'block';
-        this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
         
-        this.container.classList.add('pyrope');
+        this.container.classList.add('graphical', 'order');
         
         this.change_background_src();
         this.change_icon_src();
         
-        //TODO move
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        
-        //TODO replace with flex
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
 
@@ -1458,10 +1380,10 @@ export class GraphicalOrderView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+                    
             const elems = this.container.getElementsByClassName('disableable');
             for (let i=0; i<elems.length; i++) {
                 const elem = elems[i] as HTMLDivElement;
@@ -1478,14 +1400,7 @@ export class GraphicalOrderView extends InputWidgetView {
     change_background_src() {
         this.background = document.createElement('img');
         this.background.src = this.model.get('background_src').src;
-        this.background.style.height = `100%`;
-        this.background.style.width = `100%`;
-        
-        this.background.style.display = 'inline'
-        this.background.style.border='1px solid black';
-        this.background.style.position='absolute';
-        this.background.style.zIndex='1';
-        this.background.classList.add('pyrope');        
+        this.background.classList.add('background');        
 
         this.container.append(this.background);
     }
@@ -1504,34 +1419,22 @@ export class GraphicalOrderView extends InputWidgetView {
         icon.style.height = `${this.model.get('icon_src').height}px`;
         icon.style.width =  `${this.model.get('icon_src').width}px`;
 
-        icon.style.zIndex='4';
-        icon.style.display = 'inline-flex';
-        icon.style.position = 'absolute';
-        icon.style.alignItems = 'center';
-        icon.style.justifyContent = 'center';
-        
         const [x ,y] = coords.split(',');
         icon.style.left = `${x}px`;
         icon.style.top = `${y}px`;
+        icon.classList.add('icon');
 
-        let icon_img = document.createElement('img');
+        const icon_img = document.createElement('img');
         icon_img.src = this.model.get('icon_src').src;
-        icon_img.style.height = `100%`;
-        icon_img.style.width = `100%`;
-        icon_img.style.display = 'inline';
-        icon_img.style.position='absolute';
-        icon_img.style.zIndex='2';
+        icon_img.classList.add('icon');
 
-        let icon_span = document.createElement('span');
+        const icon_span = document.createElement('span');
         icon_span.textContent = '';
-        icon_span.style.zIndex = '3';
-        icon_span.style.display = 'inline-block';
         icon_span.style.fontSize = `${parseInt(this.model.get('icon_src').height)/2}px`;
-        icon_span.classList.add('filterable')
-    
-        icon.append(icon_img, icon_span);
-        
+        icon_span.classList.add('filterable', 'icon');
+
         icon.classList.add('graphical', 'solution', 'disableable');
+        icon.append(icon_img, icon_span);
 
         const bound_handler = this.change_on_clicked.bind(this, icon);
         //store reference to function call, to disable later
@@ -1542,17 +1445,16 @@ export class GraphicalOrderView extends InputWidgetView {
     }
 
     change_on_clicked(icon : HTMLDivElement) {
-
-        const x = icon.style.left.replace('px', '')
-        const y = icon.style.top.replace('px', '')
-        const coords = `${x},${y}`
-        const current_coords = this.model.get('value') as string[]
+        const x = icon.style.left.replace('px', '');
+        const y = icon.style.top.replace('px', '');
+        const coords = `${x},${y}`;
+        const current_coords = this.model.get('value') as string[];
 
         console.log(`Before: ${this.model.get('value')}`);
         let new_coords: string[];
-        new_coords = [...current_coords]
+        new_coords = [...current_coords];
 
-        const index = new_coords.indexOf(coords)
+        const index = new_coords.indexOf(coords);
         
         if (index >= 0) {
             //icon was already clicked, remove from tracked list 
@@ -1575,20 +1477,20 @@ export class GraphicalOrderView extends InputWidgetView {
         const icons = this.container.getElementsByClassName('filterable');
         for (let i = 0; i < icons.length; i++) {
             let icon = icons[i] as HTMLSpanElement;
-            const x = icon.parentElement!.style.left.replace('px', '')
-            const y = icon.parentElement!.style.top.replace('px', '')
-            console.log(`Updating Index for ${x},${y}`)
+            const x = icon.parentElement!.style.left.replace('px', '');
+            const y = icon.parentElement!.style.top.replace('px', '');
+            console.log(`Updating Index for ${x},${y}`);
 
-            const coords = `${x},${y}`
-            const current_coords = this.model.get('value') as string[]
+            const coords = `${x},${y}`;
+            const current_coords = this.model.get('value') as string[];
 
-            const index = current_coords.indexOf(coords)
+            const index = current_coords.indexOf(coords);
             if (index >= 0) {
-                console.log(`setting index ${index+1}`)
-                icon.textContent = `${index+1}`
+                console.log(`setting index ${index+1}`);
+                icon.textContent = `${index+1}`;
             } else {
-                console.log(`setting empty`)
-                icon.textContent = ''
+                console.log(`setting empty`);
+                icon.textContent = '';
             }
         }
     }
@@ -1610,7 +1512,7 @@ export class GraphicalOrderView extends InputWidgetView {
         const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
         if (!solution) return;
 
-        const text = this.container.getElementsByClassName('solution_text');
+        const text = this.container.getElementsByClassName('solution-text');
         if (text.length > 0) {
             for(let i=0; i<text.length; i++) {
                 const solution_span = text[i] as HTMLSpanElement;
@@ -1627,23 +1529,20 @@ export class GraphicalOrderView extends InputWidgetView {
             const solution_elements = cleaned.split(", ").map(s => s.trim());
             
             for (let i=0; i<all_containter.length+0; i++) {
-                const container = all_containter[i] as HTMLDivElement
-                let x = parseInt(container.style.left.replace('px', ''));
-                let y = parseInt(container.style.top.replace('px', ''));
+                const container = all_containter[i] as HTMLDivElement;
+                const x = parseInt(container.style.left.replace('px', ''));
+                const y = parseInt(container.style.top.replace('px', ''));
     
-                console.log(`Checking whether '${x},${y}' in ${solution_elements}`)
-                const index = solution_elements.indexOf(`${x},${y}`)
+                console.log(`Checking whether '${x},${y}' in ${solution_elements}`);
+                const index = solution_elements.indexOf(`${x},${y}`);
                 if (index != -1) {
                     const solution_text = document.createElement('span');
                     solution_text.textContent = (index+1).toString();
-                    solution_text.style.display = 'inline-block';
-                    solution_text.style.zIndex = '4';
-
-                    solution_text.classList.add('graphical', 'show', 'solution_text')
-                    console.log(`Creating Span with index ${index}`)
-                    solution_text.style.marginLeft = '3px'
+                    
+                    solution_text.classList.add('graphical', 'show', 'solution', 'solution-text');
+                    console.log(`Creating Span with index ${index}`);
         
-                    container.appendChild(solution_text)
+                    container.appendChild(solution_text);
                 }
             }            
         }
@@ -1694,27 +1593,21 @@ export class GraphicalAssociateView extends InputWidgetView {
 
         this.container = document.createElement('div');
         
-        //TODO move to .css
-        this.container.style.display = 'block';
-        this.container.style.position = 'relative';
         this.container.style.height = `${this.model.get('background_src').height}px`;
         this.container.style.width = `${this.model.get('background_src').width}px`;
         
-        this.container.classList.add('pyrope', 'graphical');
+        this.container.classList.add('graphical', 'associate');
         
-        //TODO move
         this.bg_canvas = document.createElement('canvas');
-        this.bg_canvas.style.position = 'absolute';
-        this.bg_canvas.style.zIndex='2';
         this.bg_canvas.height = this.model.get('background_src').height;
         this.bg_canvas.width = this.model.get('background_src').width;
+        this.bg_canvas.classList.add('background');
         this.bg_context = this.bg_canvas.getContext('2d')!;
         
         this.drawing_canvas = document.createElement('canvas');
-        this.drawing_canvas.style.position = 'absolute';
-        this.drawing_canvas.style.zIndex='5';
         this.drawing_canvas.height = this.model.get('background_src').height;
         this.drawing_canvas.width = this.model.get('background_src').width;
+        this.drawing_canvas.classList.add('drawing');
         this.drawing_context = this.drawing_canvas.getContext('2d')!;
         
         //only disable start of line draw since other events on their own won't do anything
@@ -1730,26 +1623,14 @@ export class GraphicalAssociateView extends InputWidgetView {
         this.container.append(this.bg_canvas, this.drawing_canvas);
         this.container.onmouseleave = this.reset_line.bind(this);
 
-        //TODO move
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        
-        //TODO replace with flex
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
 
@@ -1762,10 +1643,10 @@ export class GraphicalAssociateView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+
             const bound_handler = this.bound_handlers.get(this.drawing_canvas);
             if (bound_handler) {
                 this.drawing_canvas.removeEventListener("mousedown", bound_handler);
@@ -1778,14 +1659,8 @@ export class GraphicalAssociateView extends InputWidgetView {
     change_background_src() {
         this.background = document.createElement('img');
         this.background.src = this.model.get('background_src').src;
-        this.background.style.height = `100%`;
-        this.background.style.width = `100%`;
-        
-        this.background.style.display = 'inline';
-        this.background.style.border='1px solid black';
-        this.background.style.position='absolute';
-        this.background.style.zIndex='1';
-        
+        this.background.classList.add('background');
+
         this.container.append(this.background);
     }
 
@@ -1805,16 +1680,12 @@ export class GraphicalAssociateView extends InputWidgetView {
         icon.style.height = `${this.model.get('icon_src').height}px`;
         icon.style.width =  `${this.model.get('icon_src').width}px`;
 
-        icon.style.zIndex='4';
-        icon.style.display = 'inline';
-        icon.style.position='absolute';
-        
         const [x ,y] = coords.split(',');
         console.log('Creating Icon for coords: ' + x + ' ' + y);
         icon.style.left = `${x}px`;
         icon.style.top = `${y}px`;
         
-        icon.classList.add('pyrope', 'filterable');
+        icon.classList.add('filterable', 'icon');
 
         this.container.append(icon);
     }
@@ -1838,7 +1709,7 @@ export class GraphicalAssociateView extends InputWidgetView {
         //draw current line
         this.drawing_context.beginPath();
         this.drawing_context.strokeStyle = 'red';
-        this.drawing_context.lineWidth = 2
+        this.drawing_context.lineWidth = 2;
         //initial coords of current selected icon  
         const start = this.model.get('tracked_coords');
         
@@ -1917,7 +1788,7 @@ export class GraphicalAssociateView extends InputWidgetView {
             : all_tracked.indexOf(`${x2},${y2},${x1},${y1}`);
 
             let new_coords: string[];    
-            new_coords = [...all_tracked]
+            new_coords = [...all_tracked];
 
             if (index >= 0) {
                 console.log('Icon pair was already tracked, removing pair from value and resetting line.');
@@ -1937,7 +1808,6 @@ export class GraphicalAssociateView extends InputWidgetView {
         this.reset_line()
     }
 
-    //TODO use number representation of coords everywhere
     find_icon(coords:{x:number,y:number}) {
         const icons = this.container.getElementsByClassName('filterable');
         
@@ -1975,20 +1845,18 @@ export class GraphicalAssociateView extends InputWidgetView {
         const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
         if (!solution) return;
         
-        const solution_canvas = this.container.getElementsByClassName('solution_canvas');
+        const solution_canvas = this.container.getElementsByClassName('solution');
 
         //destroy canvas on toggle_off, saving draw state would be preferrable
         if(solution_canvas.length > 0) {
-            console.log('Deleting Canvas')
+            console.log('Deleting Canvas');
             solution_canvas[0].remove();
         } else {
             console.log(`Creating Canvas`)
             const solution_canvas = document.createElement('canvas');
-            solution_canvas.style.position = 'absolute';
-            solution_canvas.style.zIndex='3';
             solution_canvas.height = this.model.get('background_src').height;
             solution_canvas.width = this.model.get('background_src').width;
-            solution_canvas.classList.add('solution_canvas')
+            solution_canvas.classList.add('solution', 'solution-canvas');
 
             const solution_context = solution_canvas.getContext('2d')!;
         
@@ -2004,7 +1872,7 @@ export class GraphicalAssociateView extends InputWidgetView {
             //differentiate elements in order
             const solution_elements = cleaned.split(", ").map(s => s.trim());
             
-            console.log(`Drawing elems for ${solution_elements}`)
+            console.log(`Drawing elems for ${solution_elements}`);
             solution_elements.forEach(coords => {
                 console.log(`New Line for ${coords}`)
                 const [x1 ,y1, x2, y2] = coords.split(',').map(Number);
@@ -2026,15 +1894,15 @@ export class GraphicalGapMatchModel extends InputWidgetModel {
         return {
             ...super.defaults(),
             
-            _model_name: GraphicalSelectPointModel.model_name,
-            _view_name: GraphicalSelectPointModel.view_name,
+            _model_name: GraphicalGapMatchModel.model_name,
+            _view_name: GraphicalGapMatchModel.view_name,
 
             background_src: '',
             
             icon_src: '',
 
-            //TODO actually use bootstrap icon
-            gap_src: {src: '../tree/media/circle-fill_icon.svg'},
+            //avoids having to use icon
+            gap_src: {src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-circle-fill' viewBox='0 0 16 16'><circle cx='8' cy='8' r='8'/></svg>"},
 
             drag: false,
 
@@ -2066,35 +1934,19 @@ export class GraphicalGapMatchView extends InputWidgetView {
 
     render() {
         this.container = document.createElement('div');
-        
-        this.container.style.display = 'flex';
-        this.container.style.position = 'relative';
-        this.container.style.justifyContent = "start";
         this.container.style.height = `${this.model.get('background_src').height}px`;
         const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
         this.container.style.width = `${width}px`;
-        this.container.classList.add('pyrope', 'graphical');
+        this.container.classList.add('graphical', 'gapmatch');
         
-        //TODO move
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        
-        //TODO replace with flex
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
 
@@ -2107,10 +1959,10 @@ export class GraphicalGapMatchView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+
             const bound_handler = this.bound_handlers.get(this.icon_stack_container);
             if (bound_handler) {
                 this.icon_stack_container.removeEventListener("dragstart", bound_handler);
@@ -2125,27 +1977,19 @@ export class GraphicalGapMatchView extends InputWidgetView {
         this.background.src = this.model.get('background_src').src;
         this.background.style.height = `${this.model.get('background_src').height}px`;
         this.background.style.width = `${this.model.get('background_src').width}px`;
-        this.background.style.border='1px solid black';
-        this.background.style.display='inline';
-        this.background.style.zIndex='1';
+        this.background.classList.add('background');
 
-        //TODO move
         this.icon_stack_container = document.createElement('div');
-        this.icon_stack_container.style.display = 'inline-flex';
         this.icon_stack_container.style.height = `${this.model.get('background_src').height}px`;
-        this.icon_stack_container.style.width = `${this.model.get('icon_src').width}px`;
-        
-        this.icon_stack_container.style.alignItems = 'center';
-        this.icon_stack_container.style.justifyContent = 'center';
-        
+        this.icon_stack_container.style.width = `${this.model.get('icon_src').width}px`;                
+        this.icon_stack_container.ondrop = this.reset_drag.bind(this);
+
         //only disable drag start since other events on their own won't do anything
         const bound_handler = this.change_on_dragstart.bind(this);
         //store reference to function call, to disable later
         this.bound_handlers.set(this.icon_stack_container, bound_handler);
         this.icon_stack_container.addEventListener("dragstart", bound_handler);
-
-        this.icon_stack_container.ondrop = this.reset_drag.bind(this);
-        this.icon_stack_container.style.zIndex = '3';
+        this.icon_stack_container.classList.add('disableable', 'icon-stack');
         
         this.icon_stack = document.createElement('img');
         this.icon_stack.src = this.model.get('icon_src').src;
@@ -2154,7 +1998,6 @@ export class GraphicalGapMatchView extends InputWidgetView {
         //needed to not show 'block' as cursor icon 
         this.icon_stack.classList.add('draggable');
         this.icon_stack_container.append(this.icon_stack);
-        this.icon_stack_container.classList.add('disableable');
         
         this.container.append(this.background, this.icon_stack_container);
     }
@@ -2175,16 +2018,11 @@ export class GraphicalGapMatchView extends InputWidgetView {
         gap.style.height = `${this.model.get('icon_src').height}px`;
         gap.style.width =  `${this.model.get('icon_src').width}px`;
 
-        gap.style.zIndex='2';
-        gap.style.display = 'inline';
-        gap.style.position='absolute';
-        gap.style.opacity = '30%'
-        
         const [x ,y] = coords.split(',');
         console.log('Creating Gap for coords: ' + x + ' ' + y);
         gap.style.left = `${x}px`;
         gap.style.top = `${y}px`;
-        gap.classList.add('graphical', 'filterable', 'solution');
+        gap.classList.add('graphical', 'filterable', 'solution', 'gap');
         
         gap.addEventListener('dragover', (event) => 
             {
@@ -2201,18 +2039,18 @@ export class GraphicalGapMatchView extends InputWidgetView {
                     gap.src = this.model.get('icon_src').src;
                     gap.classList.add('hovered');
                 }
-            })
+            });
         gap.addEventListener('dragleave', () =>
             {
                 //do nothing if icon isn't being dragged or if gap is already filled 
                 if (!this.model.get('drag') || gap.classList.contains('selected')) {
                     gap.classList.remove('hovered');
-                    return
+                    return;
                 }
 
                 gap.classList.remove('hovered');
                 gap.src = this.model.get('gap_src').src;
-            })
+            });
         gap.ondrop = this.change_on_drop.bind(this);
 
         
@@ -2265,7 +2103,7 @@ export class GraphicalGapMatchView extends InputWidgetView {
         } else {
             let new_coords: string[];
 
-            new_coords = [...current_coords, selected_point]
+            new_coords = [...current_coords, selected_point];
             console.log("Updated value " + `${new_coords}`);
             this.model.set('value', new_coords);
             this.model.save_changes();
@@ -2304,7 +2142,7 @@ export class GraphicalGapMatchView extends InputWidgetView {
             const x = icon.style.left.replace('px', '');
             const y = icon.style.top.replace('px', '');
             const coords = `${x},${y}`;
-            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`)
+            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`);
 
             if(solution.includes(coords)) {
                 icon.classList.toggle('show');   
@@ -2318,13 +2156,11 @@ export class GraphicalPositionObjectModel extends InputWidgetModel {
         return {
             ...super.defaults(),
             
-            _model_name: GraphicalSelectPointModel.model_name,
-            _view_name: GraphicalSelectPointModel.view_name,
+            _model_name: GraphicalPositionObjectModel.model_name,
+            _view_name: GraphicalPositionObjectModel.view_name,
 
-            //TODO default white bg
             background_src: '',
             
-            //TODO default icon
             icon_src: '',
 
             drag: false,
@@ -2357,38 +2193,22 @@ export class GraphicalPositionObjectView extends InputWidgetView {
     render() {
         this.container = document.createElement('div');
         
-        this.container.style.display = 'flex';
-        this.container.style.position = 'relative';
-        this.container.style.justifyContent = "start";
         this.container.style.height = `${this.model.get('background_src').height}px`;
         const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
         this.container.style.width = `${width}px`;
-        this.container.style.zIndex = '3';
-        this.container.classList.add('pyrope', 'graphical');
+        this.container.classList.add('graphical', 'positionobject');
 
         this.container.ondragend = this.change_on_dragend.bind(this);
         this.container.ondragover = this.change_on_dragover.bind(this);
         
-        //TODO move
         this.reset_container = document.createElement('div');
-        this.reset_container.style.display = 'inline-flex';
-        this.reset_container.style.position = 'relative';
-        this.reset_container.style.height = `30px`;
         this.reset_container.style.width = `${this.model.get('background_src').width}px`;
-        
-        //TODO replace with flex
-        this.reset_container.style.left = this.container.style.left;
-        this.reset_container.style.top = this.container.style.bottom;
-        this.reset_container.style.alignItems = 'center';
-        this.reset_container.style.justifyContent = 'center';
+        this.reset_container.classList.add('graphical', 'reset-button');
         
         this.reset_button = document.createElement('button');
-        this.reset_button.classList.add('pyrope', 'ifield');
         this.reset_button.onclick = this.reset_value.bind(this);
-        this.reset_button.style.border='1px solid black';
-        this.reset_button.style.textAlign = 'center';
-        this.reset_button.style.height = '25px';
         this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
         
         this.reset_container.append(this.reset_button);
 
@@ -2400,10 +2220,10 @@ export class GraphicalPositionObjectView extends InputWidgetView {
     }
 
     change_disabled() {
-        this.change_class_name(this.reset_button);
-
         const disabled = this.model.get('disabled');
         if (disabled) {
+            this.reset_button.disabled = true;
+            
             const bound_handler = this.bound_handlers.get(this.icon);
             if (bound_handler) {
                 this.icon.removeEventListener("mousedown", bound_handler);
@@ -2418,19 +2238,13 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         this.background.src = this.model.get('background_src').src;
         this.background.style.height = `${this.model.get('background_src').height}px`;
         this.background.style.width = `${this.model.get('background_src').width}px`;
-        this.background.style.border='1px solid black';
-        this.background.style.display='inline';
-        this.background.style.zIndex='1';
+        this.background.classList.add('background');
         
-        //TODO move
         this.icon_container = document.createElement('div');
-        this.icon_container.style.display = 'inline-flex';
         this.icon_container.style.height = `${this.model.get('background_src').height}px`;
-        this.icon_container.style.width = `${this.model.get('icon_src').width}px`;
-        
-        this.icon_container.style.alignItems = 'center';
-        this.icon_container.style.justifyContent = 'center';
+        this.icon_container.style.width = `${this.model.get('icon_src').width}px`;        
         this.icon_container.ondragover = this.change_on_dragover.bind(this);
+        this.icon_container.classList.add('icon');
         
         this.icon = document.createElement('img');
         this.icon.src = this.model.get('icon_src').src;
@@ -2460,9 +2274,9 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         //use offset when starting drag, to smoothen out drop 
         const x = Number((event.clientX - rect.left).toFixed(0));
         const y = Number((event.clientY - rect.top).toFixed(0));
-        const offset = {x:x, y:y}
+        const offset = {x:x, y:y};
         
-        this.model.set('drag_offset', offset)
+        this.model.set('drag_offset', offset);
         this.model.save_changes();
         console.log('Starting drag');
     }
@@ -2492,24 +2306,21 @@ export class GraphicalPositionObjectView extends InputWidgetView {
             //could also move icon as close as possible to border, if it would overlap with background border
             //currently if icon would be outside of background OR overlap with the border, its not being saved
             if(x < 0 || x > bg_width - (icon_width_offset*2) || y < 0 || y > bg_height - (icon_height_offset*2)) {
-                console.log('Dragged element was outside of background')
+                console.log('Dragged element was outside of background');
 
                 this.reset_drag();
                 return
             }
 
-            //TODO move up
-            const moving_image = document.createElement('img');
-            moving_image.src = this.model.get('icon_src').src;
-            moving_image.style.height = `${this.model.get('icon_src').height}px`;
-            moving_image.style.width = `${this.model.get('icon_src').width}px`;
-            moving_image.style.zIndex = '2';
-            moving_image.style.position = 'absolute';
-            moving_image.classList.add('filterable');
-            moving_image.style.left = `${x}px`;
-            moving_image.style.top = `${y}px`;
-            moving_image.ondragover = this.change_on_dragover.bind(this);
-            this.container.append(moving_image)
+            const created_img = document.createElement('img');
+            created_img.src = this.model.get('icon_src').src;
+            created_img.style.height = `${this.model.get('icon_src').height}px`;
+            created_img.style.width = `${this.model.get('icon_src').width}px`;
+            created_img.style.left = `${x}px`;
+            created_img.style.top = `${y}px`;
+            created_img.ondragover = this.change_on_dragover.bind(this);
+            created_img.classList.add('filterable', 'icon');
+            this.container.append(created_img);
             
             console.log(`Moving image to ${x},${y}, saving value ${x+icon_width_offset},${y+icon_height_offset}`);
             const point = `${x+icon_width_offset},${y+icon_height_offset}`;
@@ -2561,13 +2372,13 @@ export class GraphicalPositionObjectView extends InputWidgetView {
         if (!solution) return;
 
         const areas = this.container.getElementsByClassName('solution');
-        console.log(`Found ${areas}`)
+        console.log(`Found ${areas}`);
 
         //either toggle solution areas or create them 
         if(areas.length > 0) {
             for (let i=0; i<areas.length; i++) {
                 const area = areas[i] as HTMLDivElement;
-                console.log(`Toggling show`)
+                console.log(`Toggling show`);
         
                 area.classList.toggle('show');
             } 
@@ -2579,16 +2390,14 @@ export class GraphicalPositionObjectView extends InputWidgetView {
             solution_areas.forEach(elem => {
                 const [x1,y1,x2,y2] = elem.split(',');
                 const sol = document.createElement('div');
-                sol.style.position = 'absolute'
-                sol.style.left = `${x1}px`
-                sol.style.top = `${y1}px`
-                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`
-                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`
-                sol.style.zIndex = '3'
-                console.log(`Creating area ${x1}, ${y1}, ${x2}, ${y2}`)
+                sol.style.left = `${x1}px`;
+                sol.style.top = `${y1}px`;
+                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`;
+                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`;
+                console.log(`Creating area ${x1}, ${y1}, ${x2}, ${y2}`);
         
-                sol.classList.add('graphical', 'solution', 'show');
-                this.container.appendChild(sol)
+                sol.classList.add('graphical', 'solution', 'solution-area', 'show');
+                this.container.appendChild(sol);
             })
         }
     }
