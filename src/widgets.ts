@@ -2491,8 +2491,6 @@ export class GraphicalPositionObjectView extends InputWidgetView {
             
             //could also move icon as close as possible to border, if it would overlap with background border
             //currently if icon would be outside of background OR overlap with the border, its not being saved
-            //!TODO still using upper left corner of img, better:
-            //if(x < 0 + icon_width_offset || x > bg_width - icon_width_offset || y < 0 + icon_height_offset || y > bg_height - icon_height_offset) {
             if(x < 0 || x > bg_width - (icon_width_offset*2) || y < 0 || y > bg_height - (icon_height_offset*2)) {
                 console.log('Dragged element was outside of background')
 
@@ -2513,8 +2511,8 @@ export class GraphicalPositionObjectView extends InputWidgetView {
             moving_image.ondragover = this.change_on_dragover.bind(this);
             this.container.append(moving_image)
             
-            console.log(`Moving image to ${x},${y}`);
-            const point = `${x},${y}`;
+            console.log(`Moving image to ${x},${y}, saving value ${x+icon_width_offset},${y+icon_height_offset}`);
+            const point = `${x+icon_width_offset},${y+icon_height_offset}`;
             this.update_value(point);
         }
     }
