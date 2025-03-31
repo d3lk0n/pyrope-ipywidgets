@@ -1298,7 +1298,7 @@ export class GraphicalSelectPointView extends InputWidgetView {
             } 
         } else {
             //parse as string of multiple areas
-            const cleaned = solution.replace(/[\[\]'"]/g, "").trim();
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
             //differentiate individual areas
             const solution_areas = cleaned.split(", ").map(s => s.trim());
             solution_areas.forEach(elem => {
@@ -1524,7 +1524,7 @@ export class GraphicalOrderView extends InputWidgetView {
             const all_containter = this.container.getElementsByClassName('solution');
 
             //parse as string of multiple areas
-            const cleaned = solution.replace(/[\[\]'"]/g, "").trim();
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
             //differentiate elements in order
             const solution_elements = cleaned.split(", ").map(s => s.trim());
             
@@ -1539,7 +1539,7 @@ export class GraphicalOrderView extends InputWidgetView {
                     const solution_text = document.createElement('span');
                     solution_text.textContent = (index+1).toString();
                     
-                    solution_text.classList.add('graphical', 'show', 'solution', 'solution-text');
+                    solution_text.classList.add('graphical', 'show', 'solution-text');
                     console.log(`Creating Span with index ${index}`);
         
                     container.appendChild(solution_text);
@@ -1868,7 +1868,7 @@ export class GraphicalAssociateView extends InputWidgetView {
             const height_offset = this.model.get('icon_src').height / 2;
 
             //parse as string of multiple areas
-            const cleaned = solution.replace(/[\[\]'"]/g, "").trim();
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
             //differentiate elements in order
             const solution_elements = cleaned.split(", ").map(s => s.trim());
             
@@ -2384,7 +2384,7 @@ export class GraphicalPositionObjectView extends InputWidgetView {
             } 
         } else {
             //parse as string of multiple areas
-            const cleaned = solution.replace(/[\[\]'"]/g, "").trim();
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
             //differentiate individual areas
             const solution_areas = cleaned.split(", ").map(s => s.trim());
             solution_areas.forEach(elem => {
