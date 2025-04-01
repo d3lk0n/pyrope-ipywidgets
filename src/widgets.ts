@@ -1376,3 +1376,1465 @@ export class TextAreaView extends TextView {
         this._text.rows = this.model.get('height');
     }
 }
+
+
+export class GraphicalHotspotModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            //same here, change value on toggles
+
+            _model_name: GraphicalHotspotModel.model_name,
+            _view_name: GraphicalHotspotModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+            
+            all_coords: [],
+
+            value: []
+        }
+    }
+
+    static model_name = 'GraphicalHotspotModel';
+    static view_name = 'GraphicalHotspotView';
+}
+
+export class GraphicalHotspotView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;    
+    protected bound_handlers = new Map()
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+        this.model.on('change:icon_src', this.change_icon_src, this);
+    }
+
+    render() {
+
+        this.container = document.createElement('div');
+        
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        this.container.classList.add('hotspot', 'graphical');
+        
+        this.change_background_src();
+        this.change_icon_src();
+
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+
+            const elems = this.container.getElementsByClassName('disableable');
+            for (let i=0; i<elems.length; i++) {
+                const elem = elems[i] as HTMLImageElement;
+                const bound_handler = this.bound_handlers.get(elem);
+                if (bound_handler) {
+                    elem.removeEventListener("click", bound_handler);
+                    //not really necessary, clean up in case of further map edits
+                    this.bound_handlers.delete(elem);
+                }
+            }
+        }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.classList.add('background');        
+
+        this.container.append(this.background);
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords);
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+        
+        const [x ,y] = coords.split(',');
+        console.log('Creating Icon for coords: ' + x + ' ' + y);
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+        
+        icon.classList.add('graphical', 'filterable', 'solution', 'disableable', 'icon', 'unselected');
+
+        const bound_handler = this.change_on_clicked.bind(this, icon);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(icon, bound_handler);
+        icon.addEventListener("click", bound_handler);
+
+        this.container.append(icon);
+    }
+
+    change_on_clicked(icon : HTMLImageElement) {
+
+        const x = icon.style.left.replace('px', '');
+        const y = icon.style.top.replace('px', '');
+
+        const current_coords = this.model.get('value') as string[];
+        const coords = `${x},${y}`;
+
+        let new_coords: string[];
+
+        if (current_coords.indexOf(coords) >= 0) {
+            new_coords = current_coords.filter(c => c !== coords);
+            console.log(`${coords} removed`);
+        } else {
+            new_coords = [...current_coords, coords];
+            console.log(`${coords} added`);
+        }
+
+        icon.classList.toggle('unselected');
+
+        this.model.set('value', new_coords);
+        this.model.save_changes();
+    }
+    
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        const icons = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+            icon.classList.add('unselected');
+        }
+    }
+
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const icons = this.container.getElementsByClassName('solution');
+        
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        console.log(`Got solution ${solution}`);
+        if (!solution) return;
+
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+        
+            const x = icon.style.left.replace('px', '');
+            const y = icon.style.top.replace('px', '');
+            const coords = `${x},${y}`;
+            
+            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`);
+
+            if(solution.includes(coords)) {
+                icon.classList.toggle('show');   
+            }
+        }
+    }
+}
+
+export class GraphicalSelectPointModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalSelectPointModel.model_name,
+            _view_name: GraphicalSelectPointModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+            
+            value: []
+        }
+    }
+
+    static model_name = 'GraphicalSelectPointModel';
+    static view_name = 'GraphicalSelectPointView';
+}
+
+export class GraphicalSelectPointView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    
+    protected bound_handlers = new Map();
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        this.container.classList.add('graphical', 'disableable', 'selectpoint');
+        
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+
+        const bound_handler = this.create_icon_element.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.container, bound_handler);
+        this.container.addEventListener("click", bound_handler);
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+
+            const bound_handler = this.bound_handlers.get(this.container);
+            if (bound_handler) {
+                this.container.removeEventListener("click", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.container);
+            }
+       }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+
+        this.background.classList.add('background');
+        this.container.append(this.background);
+    }
+
+    create_icon_element(event:MouseEvent) {
+
+        //bounding rectangle of container == image for calculating offset to 
+        const rect = this.container.getBoundingClientRect();
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+        
+        const icon_width_offset = parseInt(this.model.get('icon_src').width)/2;
+        const icon_height_offset = parseInt(this.model.get('icon_src').height)/2;
+        const bg_width = parseInt(this.model.get('background_src').width);
+        const bg_height = parseInt(this.model.get('background_src').height);
+        
+        //could also move icon as close as possible to border, if it would overlap with background border
+        //currently if icon would be outside of background OR overlap with the border, its not being saved
+        if(x < 0 + icon_width_offset || x > bg_width - icon_width_offset || y < 0 + icon_height_offset || y > bg_height - icon_height_offset) {
+            console.log('Selected point would create an overlap of the icon and background border');
+            
+            return;
+        }
+
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+        
+        //using center of icon to track where clicked
+        icon.style.left = `${x-icon_width_offset}px`;
+        icon.style.top = `${y-icon_width_offset}px`;
+
+        icon.classList.add('removable', 'icon');
+        
+        this.container.append(icon);
+        
+        //use clicked position as center of icon and as saved value
+        const selected_point = `${x},${y}`;
+        this.update_value(selected_point);
+
+    }
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+
+        if (current_coords.indexOf(selected_point) >= 0) { 
+            console.log(`Selected point was already added to value: ${selected_point}`);
+        } else {
+            let new_coords: string[];
+            
+            new_coords = [...current_coords, selected_point];
+            console.log(`${selected_point} added`);
+            
+            this.model.set('value', new_coords);
+            this.model.save_changes();    
+        }
+    }
+
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        const icons = this.container.getElementsByClassName('removable');
+        while(icons[0]) {
+            this.container.removeChild(icons[0]);
+        }
+    }
+    
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        if (!solution) return;
+
+        const areas = this.container.getElementsByClassName('solution');
+        console.log(`Found ${areas}`);
+
+        //either toggle solution areas or create them 
+        if(areas.length > 0) {
+            for (let i=0; i<areas.length; i++) {
+                const area = areas[i] as HTMLDivElement;        
+                area.classList.toggle('show');
+            } 
+        } else {
+            //parse as string of multiple areas
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
+            //differentiate individual areas
+            const solution_areas = cleaned.split(", ").map(s => s.trim());
+            solution_areas.forEach(elem => {
+                const [x1,y1,x2,y2] = elem.split(',');
+                const sol = document.createElement('div');
+                sol.style.left = `${x1}px`;
+                sol.style.top = `${y1}px`;
+                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`;
+                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`;
+                console.log(`Creating area ${x1}, ${y1}, ${x2}, ${y2}`)
+        
+                sol.classList.add('graphical', 'solution', 'solution-area', 'show');
+                this.container.appendChild(sol);
+            })
+        }
+    }
+}
+
+export class GraphicalOrderModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalOrderModel.model_name,
+            _view_name: GraphicalOrderModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+
+            all_coords: [],
+
+            value: []
+        }
+    }
+
+    static model_name = 'GraphicalOrderModel';
+    static view_name = 'GraphicalOrderView';
+}
+
+export class GraphicalOrderView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected reset_container: HTMLDivElement;
+    protected reset_button: HTMLButtonElement;
+    protected background: HTMLImageElement;
+    
+    protected bound_handlers = new Map();
+    
+    init_callbacks() {
+        super.init_callbacks();
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        
+        this.container.classList.add('graphical', 'order');
+        
+        this.change_background_src();
+        this.change_icon_src();
+        
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+                    
+            const elems = this.container.getElementsByClassName('disableable');
+            for (let i=0; i<elems.length; i++) {
+                const elem = elems[i] as HTMLDivElement;
+                const bound_handler = this.bound_handlers.get(elem);
+                if (bound_handler) {
+                    elem.removeEventListener("click", bound_handler);
+                    //not really necessary, clean up in case of further map edits
+                    this.bound_handlers.delete(elem);
+                }
+            }
+        }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.classList.add('background');        
+
+        this.container.append(this.background);
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords);
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('div');
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        const [x ,y] = coords.split(',');
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+        icon.classList.add('icon');
+
+        const icon_img = document.createElement('img');
+        icon_img.src = this.model.get('icon_src').src;
+        icon_img.classList.add('icon');
+
+        const icon_span = document.createElement('span');
+        icon_span.textContent = '';
+        icon_span.style.fontSize = `${parseInt(this.model.get('icon_src').height)/2}px`;
+        icon_span.classList.add('filterable', 'icon');
+
+        icon.classList.add('graphical', 'solution', 'disableable');
+        icon.append(icon_img, icon_span);
+
+        const bound_handler = this.change_on_clicked.bind(this, icon);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(icon, bound_handler);
+        icon.addEventListener("click", bound_handler);
+
+        this.container.append(icon);
+    }
+
+    change_on_clicked(icon : HTMLDivElement) {
+        const x = icon.style.left.replace('px', '');
+        const y = icon.style.top.replace('px', '');
+        const coords = `${x},${y}`;
+        const current_coords = this.model.get('value') as string[];
+
+        console.log(`Before: ${this.model.get('value')}`);
+        let new_coords: string[];
+        new_coords = [...current_coords];
+
+        const index = new_coords.indexOf(coords);
+        
+        if (index >= 0) {
+            //icon was already clicked, remove from tracked list 
+            console.log(`${coords} will be removed from tracked`);
+            new_coords.splice(index, 1);
+        } else {
+            //icon not tracked yet, add to tracked list 
+            console.log(`${coords} will be added to tracked`);
+            new_coords.push(coords);
+        }
+        this.model.set('value', new_coords);
+        this.model.save_changes();
+        console.log(`After: ${this.model.get('value')}`);
+
+        //reset indeces according to order in tracked values
+        this.update_all_indeces();
+    }
+
+    update_all_indeces() {
+        const icons = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLSpanElement;
+            const x = icon.parentElement!.style.left.replace('px', '');
+            const y = icon.parentElement!.style.top.replace('px', '');
+            console.log(`Updating Index for ${x},${y}`);
+
+            const coords = `${x},${y}`;
+            const current_coords = this.model.get('value') as string[];
+
+            const index = current_coords.indexOf(coords);
+            if (index >= 0) {
+                console.log(`setting index ${index+1}`);
+                icon.textContent = `${index+1}`;
+            } else {
+                console.log(`setting empty`);
+                icon.textContent = '';
+            }
+        }
+    }
+
+    reset_value() {
+        console.log("Resetting value");
+        this.model.set('value', []);
+        this.model.save_changes();
+
+        this.update_all_indeces();
+    }
+
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        if (!solution) return;
+
+        const text = this.container.getElementsByClassName('solution-text');
+        if (text.length > 0) {
+            for(let i=0; i<text.length; i++) {
+                const solution_span = text[i] as HTMLSpanElement;
+                solution_span.classList.toggle('hide');
+                solution_span.classList.toggle('show');
+            }
+        } else {
+
+            const all_containter = this.container.getElementsByClassName('solution');
+
+            //parse as string of multiple areas
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
+            //differentiate elements in order
+            const solution_elements = cleaned.split(", ").map(s => s.trim());
+            
+            for (let i=0; i<all_containter.length+0; i++) {
+                const container = all_containter[i] as HTMLDivElement;
+                const x = parseInt(container.style.left.replace('px', ''));
+                const y = parseInt(container.style.top.replace('px', ''));
+    
+                console.log(`Checking whether '${x},${y}' in ${solution_elements}`);
+                const index = solution_elements.indexOf(`${x},${y}`);
+                if (index != -1) {
+                    const solution_text = document.createElement('span');
+                    solution_text.textContent = (index+1).toString();
+                    
+                    solution_text.classList.add('graphical', 'show', 'solution-text');
+                    console.log(`Creating Span with index ${index}`);
+        
+                    container.appendChild(solution_text);
+                }
+            }            
+        }
+    }
+}
+
+export class GraphicalAssociateModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            _model_name: GraphicalAssociateModel.model_name,
+            _view_name: GraphicalAssociateModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+            
+            tracked_coords: {} as {x:number, y:number},
+
+            all_coords: [],
+
+            value: []
+        }
+    }
+
+    static model_name = 'GraphicalAssociateModel';
+    static view_name = 'GraphicalAssociateView';
+}
+
+export class GraphicalAssociateView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected reset_container: HTMLDivElement;
+    protected reset_button: HTMLButtonElement;
+    protected background: HTMLImageElement;
+    protected bg_canvas: HTMLCanvasElement;
+    protected bg_context: CanvasRenderingContext2D;
+    protected drawing_canvas: HTMLCanvasElement;
+    protected drawing_context: CanvasRenderingContext2D;
+    
+    protected bound_handlers = new Map();
+
+    init_callbacks() {
+        super.init_callbacks();
+        
+    }
+    render() {
+
+        this.container = document.createElement('div');
+        
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        this.container.style.width = `${this.model.get('background_src').width}px`;
+        
+        this.container.classList.add('graphical', 'associate');
+        
+        this.bg_canvas = document.createElement('canvas');
+        this.bg_canvas.height = this.model.get('background_src').height;
+        this.bg_canvas.width = this.model.get('background_src').width;
+        this.bg_canvas.classList.add('background');
+        this.bg_context = this.bg_canvas.getContext('2d')!;
+        
+        this.drawing_canvas = document.createElement('canvas');
+        this.drawing_canvas.height = this.model.get('background_src').height;
+        this.drawing_canvas.width = this.model.get('background_src').width;
+        this.drawing_canvas.classList.add('drawing');
+        this.drawing_context = this.drawing_canvas.getContext('2d')!;
+        
+        //only disable start of line draw since other events on their own won't do anything
+        const bound_handler = this.start_draw_line.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.drawing_canvas, bound_handler);
+        this.drawing_canvas.addEventListener("mousedown", bound_handler);
+
+        this.drawing_canvas.onmouseup = this.end_draw_line.bind(this);
+        this.drawing_canvas.onmousemove = this.move_line.bind(this);
+        this.drawing_canvas.classList.add('disableable');
+        
+        this.container.append(this.bg_canvas, this.drawing_canvas);
+        this.container.onmouseleave = this.reset_line.bind(this);
+
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+        this.change_icon_src();
+        
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+
+            const bound_handler = this.bound_handlers.get(this.drawing_canvas);
+            if (bound_handler) {
+                this.drawing_canvas.removeEventListener("mousedown", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.drawing_canvas);
+            }
+       }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.classList.add('background');
+
+        this.container.append(this.background);
+    }
+
+    change_icon_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_icon_element(coords);
+        });
+    }
+
+    create_icon_element(coords:string) {
+        const icon = document.createElement('img');
+        icon.src = this.model.get('icon_src').src;
+        
+        icon.style.height = `${this.model.get('icon_src').height}px`;
+        icon.style.width =  `${this.model.get('icon_src').width}px`;
+
+        const [x ,y] = coords.split(',');
+        console.log('Creating Icon for coords: ' + x + ' ' + y);
+        icon.style.left = `${x}px`;
+        icon.style.top = `${y}px`;
+        
+        icon.classList.add('filterable', 'icon');
+
+        this.container.append(icon);
+    }
+
+    start_draw_line(event:MouseEvent) {
+        const rect = this.container.getBoundingClientRect();
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+    
+        this.model.set('tracked_coords', {x,y});
+        this.model.save_changes();
+    }
+
+    move_line(event : MouseEvent) {
+        if(!this.model.get('tracked_coords')) {
+            return;
+        }
+
+        this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);
+        
+        //draw current line
+        this.drawing_context.beginPath();
+        this.drawing_context.strokeStyle = 'red';
+        this.drawing_context.lineWidth = 2;
+        //initial coords of current selected icon  
+        const start = this.model.get('tracked_coords');
+        
+        const rect = this.container.getBoundingClientRect();
+        const x_end = Number((event.clientX - rect.left).toFixed(0));
+        const y_end = Number((event.clientY - rect.top).toFixed(0));
+        
+        this.drawing_context.moveTo(start.x, start.y);
+        this.drawing_context.lineTo(x_end, y_end);
+        this.drawing_context.stroke();
+        this.drawing_context.closePath();
+    }
+
+    reset_line() {
+        if(this.model.get('tracked_coords')) {
+            this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);    
+            this.model.set('tracked_coords', {});
+        }
+
+        this.redraw_bg();
+    }
+
+    redraw_bg() {
+        const all_tracked = this.model.get('value') as string[];
+
+        this.bg_context.clearRect(0,0,this.bg_canvas.width,this.bg_canvas.height);
+        this.bg_context.strokeStyle = 'black';
+        this.bg_context.lineWidth = 2;
+
+        const width_offset = this.model.get('icon_src').width / 2;
+        const height_offset = this.model.get('icon_src').height / 2;
+
+        all_tracked.forEach(coords => {
+            const [x1 ,y1, x2, y2] = coords.split(',').map(Number);
+
+            this.bg_context.beginPath();
+            this.bg_context.strokeStyle = 'black';
+            this.bg_context.moveTo(x1+width_offset, y1+height_offset);
+            this.bg_context.lineTo(x2+width_offset, y2+height_offset);
+            this.bg_context.stroke(); 
+            this.bg_context.closePath();
+        });        
+    }
+
+    end_draw_line(event:MouseEvent) {
+        if (!this.model.get('tracked_coords')) {
+            console.log("Couldn't end drawing line, no tracked center found.");
+            return;
+        }
+        
+        const rect = this.container.getBoundingClientRect();
+        const x_end = Number((event.clientX - rect.left).toFixed(0));
+        const y_end = Number((event.clientY - rect.top).toFixed(0));
+        
+        //determine if start and end point are within any icon boundaries
+        const start_icon = this.find_icon(this.model.get('tracked_coords'));
+        const end_icon = this.find_icon({x:x_end,y:y_end});
+    
+        if (!start_icon || !end_icon) {
+            console.log("Either start or end coordinates could not be matched to an icon.");
+        } else if (start_icon == end_icon) {
+            console.log('End icon is same as starting icon, resetting line without saving value.');
+        } else {
+            console.log('Adding selected icons to value.');
+
+            //compare whether these icons are already tracked
+            const all_tracked = this.model.get('value') as string[];
+
+            const x1 = start_icon.style.left.replace('px','');
+            const y1 = start_icon.style.top.replace('px','');
+            const x2 = end_icon.style.left.replace('px','');
+            const y2 = end_icon.style.top.replace('px','');
+
+            const index = all_tracked.indexOf(`${x1},${y1},${x2},${y2}`) != -1
+            ? all_tracked.indexOf(`${x1},${y1},${x2},${y2}`)
+            : all_tracked.indexOf(`${x2},${y2},${x1},${y1}`);
+
+            let new_coords: string[];    
+            new_coords = [...all_tracked];
+
+            if (index >= 0) {
+                console.log('Icon pair was already tracked, removing pair from value and resetting line.');
+                new_coords.splice(index, 1);
+            } else {
+                console.log('Icon pair was not tracked yet, adding pair to value and resetting line.');
+                new_coords.push(`${x1},${y1},${x2},${y2}`);
+            }
+
+            this.model.set('value', new_coords);
+            this.model.save_changes();
+
+            console.log(`After: ${this.model.get('value')}`);
+        }
+
+        //always reset line (new tracked values will be redrawn)
+        this.reset_line()
+    }
+
+    find_icon(coords:{x:number,y:number}) {
+        const icons = this.container.getElementsByClassName('filterable');
+        
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+            const left = parseInt(icon.style.left.replace('px', ''));
+            const top = parseInt(icon.style.top.replace('px', ''));
+            const width = parseInt(icon.style.width.replace('px', ''));
+            const height = parseInt(icon.style.height.replace('px', ''));
+
+            if (coords.x > left && coords.x < left+width && coords.y > top && coords.y < top+height) {
+                return icon;
+            }
+        }   
+
+        return undefined;    
+    }
+
+    reset_value() {
+        console.log("Resetting value and all lines");
+        this.model.set('value', []);
+        this.model.set('tracked_coords', {});
+        this.model.save_changes();
+
+        this.drawing_context.clearRect(0,0,this.drawing_canvas.width,this.drawing_canvas.height);    
+        this.bg_context.clearRect(0,0,this.bg_canvas.width,this.bg_canvas.height);
+    }
+
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        if (!solution) return;
+        
+        const solution_canvas = this.container.getElementsByClassName('solution');
+
+        //destroy canvas on toggle_off, saving draw state would be preferrable
+        if(solution_canvas.length > 0) {
+            console.log('Deleting Canvas');
+            solution_canvas[0].remove();
+        } else {
+            console.log(`Creating Canvas`)
+            const solution_canvas = document.createElement('canvas');
+            solution_canvas.height = this.model.get('background_src').height;
+            solution_canvas.width = this.model.get('background_src').width;
+            solution_canvas.classList.add('solution', 'solution-canvas');
+
+            const solution_context = solution_canvas.getContext('2d')!;
+        
+            solution_context.clearRect(0,0,this.bg_canvas.width,this.bg_canvas.height);
+            solution_context.strokeStyle = 'green';
+            solution_context.lineWidth = 3;
+    
+            const width_offset = this.model.get('icon_src').width / 2;
+            const height_offset = this.model.get('icon_src').height / 2;
+
+            //parse as string of multiple areas
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
+            //differentiate elements in order
+            const solution_elements = cleaned.split(", ").map(s => s.trim());
+            
+            console.log(`Drawing elems for ${solution_elements}`);
+            solution_elements.forEach(coords => {
+                console.log(`New Line for ${coords}`)
+                const [x1 ,y1, x2, y2] = coords.split(',').map(Number);
+    
+                solution_context.beginPath();
+                solution_context.moveTo(x1+width_offset, y1+height_offset);
+                solution_context.lineTo(x2+width_offset, y2+height_offset);
+                solution_context.stroke(); 
+                solution_context.closePath();
+            });        
+
+            this.container.append(solution_canvas);
+        }
+    }
+}
+
+export class GraphicalGapMatchModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalGapMatchModel.model_name,
+            _view_name: GraphicalGapMatchModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+
+            //avoids having to use icon
+            gap_src: {src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-circle-fill' viewBox='0 0 16 16'><circle cx='8' cy='8' r='8'/></svg>"},
+
+            drag: false,
+
+            all_coords: [],
+            
+            value: []
+        }
+    }
+
+    static model_name = 'GraphicalGapMatchModel';
+    static view_name = 'GraphicalGapMatchView';
+}
+
+export class GraphicalGapMatchView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    protected icon_stack: HTMLImageElement;
+    protected icon_stack_container: HTMLDivElement;
+
+    protected bound_handlers = new Map();
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
+        this.container.style.width = `${width}px`;
+        this.container.classList.add('graphical', 'gapmatch');
+        
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+        this.change_gap_src();
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+
+            const bound_handler = this.bound_handlers.get(this.icon_stack_container);
+            if (bound_handler) {
+                this.icon_stack_container.removeEventListener("dragstart", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.icon_stack_container);
+            }
+       }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `${this.model.get('background_src').height}px`;
+        this.background.style.width = `${this.model.get('background_src').width}px`;
+        this.background.classList.add('background');
+
+        this.icon_stack_container = document.createElement('div');
+        this.icon_stack_container.style.height = `${this.model.get('background_src').height}px`;
+        this.icon_stack_container.style.width = `${this.model.get('icon_src').width}px`;                
+        this.icon_stack_container.ondrop = this.reset_drag.bind(this);
+
+        //only disable drag start since other events on their own won't do anything
+        const bound_handler = this.change_on_dragstart.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.icon_stack_container, bound_handler);
+        this.icon_stack_container.addEventListener("dragstart", bound_handler);
+        this.icon_stack_container.classList.add('disableable', 'icon-stack');
+        
+        this.icon_stack = document.createElement('img');
+        this.icon_stack.src = this.model.get('icon_src').src;
+        this.icon_stack.style.height = `${this.model.get('icon_src').height}px`;
+        this.icon_stack.style.width = `${this.model.get('icon_src').width}px`;
+        //needed to not show 'block' as cursor icon 
+        this.icon_stack.classList.add('draggable');
+        this.icon_stack_container.append(this.icon_stack);
+        
+        this.container.append(this.background, this.icon_stack_container);
+    }
+
+    change_gap_src() {
+        const all_coords: Array<string> = this.model.get('all_coords');
+        console.log('All Icons: ' + all_coords);
+
+        all_coords.forEach(coords => {
+            this.create_gap_element(coords);
+        });
+    }
+
+    create_gap_element(coords:string) {
+        const gap = document.createElement('img');
+        gap.src = this.model.get('gap_src').src;
+
+        gap.style.height = `${this.model.get('icon_src').height}px`;
+        gap.style.width =  `${this.model.get('icon_src').width}px`;
+
+        const [x ,y] = coords.split(',');
+        console.log('Creating Gap for coords: ' + x + ' ' + y);
+        gap.style.left = `${x}px`;
+        gap.style.top = `${y}px`;
+        gap.classList.add('graphical', 'filterable', 'solution', 'gap');
+        
+        gap.addEventListener('dragover', (event) => 
+            {
+                //if ínvalid element is being dragged prevent dropzone 
+                if (!this.model.get("drag")) {
+                    return;
+                }
+
+                //show dropzone
+                event.preventDefault();
+                
+                //only add hovered once
+                if (!gap.classList.contains("hovered")) {
+                    gap.src = this.model.get('icon_src').src;
+                    gap.classList.add('hovered');
+                }
+            });
+        gap.addEventListener('dragleave', () =>
+            {
+                //do nothing if icon isn't being dragged or if gap is already filled 
+                if (!this.model.get('drag') || gap.classList.contains('selected')) {
+                    gap.classList.remove('hovered');
+                    return;
+                }
+
+                gap.classList.remove('hovered');
+                gap.src = this.model.get('gap_src').src;
+            });
+        gap.ondrop = this.change_on_drop.bind(this);
+
+        
+        this.container.append(gap);
+    }
+
+    reset_drag() {
+        this.model.set('drag', false);
+        this.model.save_changes();
+    }
+
+    change_on_dragstart() {
+        this.model.set('drag', true);
+        this.model.save_changes();
+    }
+
+    change_on_drop(event:DragEvent) {
+        event.preventDefault();
+        if (!this.model.get('drag')) {
+            return;
+        }
+
+        const hovered = this.container.getElementsByClassName('hovered');
+        //check whether drag ended over a gap
+        if (!hovered || hovered.length == 0) {
+            this.reset_drag();
+            return;
+        }
+        
+        //already filled
+        if (hovered[0].classList.contains('selected')) {
+            //could remove value here
+        }
+        const selected_gap = hovered[0] as HTMLImageElement; 
+        
+        selected_gap.src = this.model.get('icon_src').src;
+        selected_gap.classList.add('selected');
+        selected_gap.classList.remove('hovered');
+        
+        const x = selected_gap.style.left.replace('px', '');
+        const y = selected_gap.style.top.replace('px', '');
+        this.update_value(`${x},${y}`);
+    }
+
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+    
+        if (current_coords.indexOf(selected_point) >= 0) {
+            console.log(`Selected gap was already added to value: ${selected_point}`);
+        } else {
+            let new_coords: string[];
+
+            new_coords = [...current_coords, selected_point];
+            console.log("Updated value " + `${new_coords}`);
+            this.model.set('value', new_coords);
+            this.model.save_changes();
+        }
+        this.reset_drag();
+    }
+
+    reset_value() {
+        console.log("Resetting value and all gaps");
+        this.model.set('value', []);
+        this.model.set('drag', false);
+        this.model.save_changes();
+
+        const gaps = this.container.getElementsByClassName('filterable');
+        for (let i = 0; i < gaps.length; i++) {
+            let gap = gaps[i] as HTMLImageElement;
+            gap.src = this.model.get('gap_src').src;
+            gap.classList.remove('selected');
+        }
+    }
+
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const icons = this.container.getElementsByClassName('solution');
+        
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        if (!solution) return;
+
+        for (let i = 0; i < icons.length; i++) {
+            let icon = icons[i] as HTMLImageElement;
+        
+            const x = icon.style.left.replace('px', '');
+            const y = icon.style.top.replace('px', '');
+            const coords = `${x},${y}`;
+            console.log(`Checking whether ${coords} in ${solution} : ${solution.includes(coords)}`);
+
+            if(solution.includes(coords)) {
+                icon.classList.toggle('show');   
+            }
+        }
+    }
+}
+
+export class GraphicalPositionObjectModel extends InputWidgetModel {
+    defaults() {
+        return {
+            ...super.defaults(),
+            
+            _model_name: GraphicalPositionObjectModel.model_name,
+            _view_name: GraphicalPositionObjectModel.view_name,
+
+            background_src: '',
+            
+            icon_src: '',
+
+            drag: false,
+            drag_offset: {} as {x:number, y:number},
+
+            value: [] 
+        }
+    }
+
+    static model_name = 'GraphicalPositionObjectModel';
+    static view_name = 'GraphicalPositionObjectView';
+}
+
+export class GraphicalPositionObjectView extends InputWidgetView {
+
+    protected container: HTMLDivElement;
+    protected background: HTMLImageElement;
+    protected reset_button: HTMLButtonElement;
+    protected reset_container: HTMLDivElement;
+    protected icon: HTMLImageElement;
+    protected icon_container: HTMLDivElement;
+
+    protected bound_handlers = new Map();
+
+    init_callbacks() {
+        super.init_callbacks();
+        this.model.on('change:background_src', this.change_background_src, this);
+    }
+
+    render() {
+        this.container = document.createElement('div');
+        
+        this.container.style.height = `${this.model.get('background_src').height}px`;
+        const width = (this.model.get('background_src').width as number) + (this.model.get('icon_src').width as number);
+        this.container.style.width = `${width}px`;
+        this.container.classList.add('graphical', 'positionobject');
+
+        this.container.ondragend = this.change_on_dragend.bind(this);
+        this.container.ondragover = this.change_on_dragover.bind(this);
+        
+        this.reset_container = document.createElement('div');
+        this.reset_container.style.width = `${this.model.get('background_src').width}px`;
+        this.reset_container.classList.add('graphical', 'reset-button');
+        
+        this.reset_button = document.createElement('button');
+        this.reset_button.onclick = this.reset_value.bind(this);
+        this.reset_button.textContent = 'Reset';
+        this.reset_button.classList.add('pyrope', 'ifield');
+        
+        this.reset_container.append(this.reset_button);
+
+        this.change_background_src();
+
+        this.el.append(this.container, this.reset_container);
+
+        super.render();
+    }
+
+    change_disabled() {
+        const disabled = this.model.get('disabled');
+        if (disabled) {
+            this.reset_button.disabled = true;
+            
+            const bound_handler = this.bound_handlers.get(this.icon);
+            if (bound_handler) {
+                this.icon.removeEventListener("mousedown", bound_handler);
+                //not really necessary, clean up in case of further map edits
+                this.bound_handlers.delete(this.icon);
+            }
+       }
+    }
+
+    change_background_src() {
+        this.background = document.createElement('img');
+        this.background.src = this.model.get('background_src').src;
+        this.background.style.height = `${this.model.get('background_src').height}px`;
+        this.background.style.width = `${this.model.get('background_src').width}px`;
+        this.background.classList.add('background');
+        
+        this.icon_container = document.createElement('div');
+        this.icon_container.style.height = `${this.model.get('background_src').height}px`;
+        this.icon_container.style.width = `${this.model.get('icon_src').width}px`;        
+        this.icon_container.ondragover = this.change_on_dragover.bind(this);
+        this.icon_container.classList.add('icon');
+        
+        this.icon = document.createElement('img');
+        this.icon.src = this.model.get('icon_src').src;
+        this.icon.style.height = `${this.model.get('icon_src').height}px`;
+        this.icon.style.width = `${this.model.get('icon_src').width}px`;
+        
+        //needed to not show 'blocked' as cursor icon 
+        this.icon.classList.add('draggable', 'disableable');
+
+        //only disable mouse down on icon since other events on their own won't do anything
+        const bound_handler = this.change_on_mousedown.bind(this);
+        //store reference to function call, to disable later
+        this.bound_handlers.set(this.icon, bound_handler);
+        this.icon.addEventListener("mousedown", bound_handler);
+
+        this.icon.ondrop = this.reset_drag.bind(this);
+        this.icon_container.append(this.icon);
+        
+        this.container.append(this.background, this.icon_container);
+    }
+
+    change_on_mousedown(event:MouseEvent) {
+        this.model.set('drag',true);
+
+        const rect = this.icon.getBoundingClientRect();
+        
+        //use offset when starting drag, to smoothen out drop 
+        const x = Number((event.clientX - rect.left).toFixed(0));
+        const y = Number((event.clientY - rect.top).toFixed(0));
+        const offset = {x:x, y:y};
+        
+        this.model.set('drag_offset', offset);
+        this.model.save_changes();
+        console.log('Starting drag');
+    }
+
+    change_on_dragover(event:DragEvent) {
+        if (this.model.get('drag')) {
+            event.preventDefault();
+        }
+    } 
+
+    change_on_dragend(event:DragEvent) {
+        if (this.model.get('drag')) {
+            const rect = this.background.getBoundingClientRect();
+            
+            //take offset of where image is grabbed into consideration
+            //to match drawn icon with dragged icon
+            const width_offset = this.model.get('drag_offset').x;
+            const height_offset = this.model.get('drag_offset').y;
+            const x = Number((event.clientX - rect.left - width_offset).toFixed(0));
+            const y = Number((event.clientY - rect.top - height_offset).toFixed(0));
+
+            const icon_width_offset = parseInt(this.model.get('icon_src').width)/2;
+            const icon_height_offset = parseInt(this.model.get('icon_src').height)/2;
+            const bg_width = parseInt(this.model.get('background_src').width);
+            const bg_height = parseInt(this.model.get('background_src').height);
+            
+            //could also move icon as close as possible to border, if it would overlap with background border
+            //currently if icon would be outside of background OR overlap with the border, its not being saved
+            if(x < 0 || x > bg_width - (icon_width_offset*2) || y < 0 || y > bg_height - (icon_height_offset*2)) {
+                console.log('Dragged element was outside of background');
+
+                this.reset_drag();
+                return
+            }
+
+            const created_img = document.createElement('img');
+            created_img.src = this.model.get('icon_src').src;
+            created_img.style.height = `${this.model.get('icon_src').height}px`;
+            created_img.style.width = `${this.model.get('icon_src').width}px`;
+            created_img.style.left = `${x}px`;
+            created_img.style.top = `${y}px`;
+            created_img.ondragover = this.change_on_dragover.bind(this);
+            created_img.classList.add('filterable', 'icon');
+            this.container.append(created_img);
+            
+            console.log(`Moving image to ${x},${y}, saving value ${x+icon_width_offset},${y+icon_height_offset}`);
+            const point = `${x+icon_width_offset},${y+icon_height_offset}`;
+            this.update_value(point);
+        }
+    }
+
+    update_value(selected_point:string) {
+        const current_coords = this.model.get('value') as string[];
+
+        if (current_coords.indexOf(selected_point) >= 0) {
+            console.log(`Selected position was already added to value: ${selected_point}`);
+        } else {
+            let new_coords: string[];
+
+            new_coords = [...current_coords, selected_point];
+            console.log("Updated values " + `${new_coords}`);
+            this.model.set('value', new_coords);
+            this.model.save_changes();
+        }
+        this.reset_drag();
+    }
+
+    
+    reset_drag() {
+        this.model.set('drag', false);
+        this.model.save_changes();
+    }
+
+    reset_value() {
+        console.log("Resetting all values");
+        this.model.set('value', []);
+        this.model.set('drag', false);
+        this.model.save_changes();
+
+        const moving_images = this.container.getElementsByClassName('filterable');
+        for (let i = 0, len = moving_images.length; i < len; i++) {
+            moving_images[0].remove();
+        }
+    }
+
+    toggle_tooltip() {
+        super.toggle_tooltip();
+        this.toggle_solution_highlight();
+    }
+
+    toggle_solution_highlight() {
+        const solution = this.model.get('_solution_mime_bundle')[0]['text/plain'] as string;
+        if (!solution) return;
+
+        const areas = this.container.getElementsByClassName('solution');
+        console.log(`Found ${areas}`);
+
+        //either toggle solution areas or create them 
+        if(areas.length > 0) {
+            for (let i=0; i<areas.length; i++) {
+                const area = areas[i] as HTMLDivElement;
+                console.log(`Toggling show`);
+        
+                area.classList.toggle('show');
+            } 
+        } else {
+            //parse as string of multiple areas
+            const cleaned = solution.replace(/[\[\]'"\r\n]/g, "").trim();
+            //differentiate individual areas
+            const solution_areas = cleaned.split(", ").map(s => s.trim());
+            solution_areas.forEach(elem => {
+                const [x1,y1,x2,y2] = elem.split(',');
+                const sol = document.createElement('div');
+                sol.style.left = `${x1}px`;
+                sol.style.top = `${y1}px`;
+                sol.style.width = `${parseInt(x2)-parseInt(x1)}px`;
+                sol.style.height = `${parseInt(y2)-parseInt(y1)}px`;
+                console.log(`Creating area ${x1}, ${y1}, ${x2}, ${y2}`);
+        
+                sol.classList.add('graphical', 'solution', 'solution-area', 'show');
+                this.container.appendChild(sol);
+            })
+        }
+    }
+}

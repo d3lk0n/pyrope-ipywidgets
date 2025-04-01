@@ -4,7 +4,7 @@ from fractions import Fraction
 from IPython import get_ipython
 from ipywidgets import Button, DOMWidget, Output, widget_serialization
 import numpy
-from pyrope.messages import ChangeWidgetAttribute, Submit
+from pyrope_ipywidgets.messages_pyrope import ChangeWidgetAttribute, Submit
 import sympy
 from traitlets import (
     Any, Bool, default, Dict, Enum, Float, Instance, Int, List, observe, Tuple,
@@ -496,3 +496,67 @@ class TextArea(Text):
 
     height = Int(4).tag(sync=True)
     width = Int(50).tag(sync=True)
+
+class GraphicalHotspot(InputWidget):
+    
+    _model_name = Unicode('GraphicalHotspotModel').tag(sync=True)
+    _view_name = Unicode('GraphicalHotspotView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+    
+class GraphicalSelectPoint(InputWidget):
+    
+    _model_name = Unicode('GraphicalSelectPointModel').tag(sync=True)
+    _view_name = Unicode('GraphicalSelectPointView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+    
+class GraphicalOrder(InputWidget):
+    
+    _model_name = Unicode('GraphicalOrderModel').tag(sync=True)
+    _view_name = Unicode('GraphicalOrderView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+
+class GraphicalAssociate(InputWidget):
+    
+    _model_name = Unicode('GraphicalAssociateModel').tag(sync=True)
+    _view_name = Unicode('GraphicalAssociateView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+    
+class GraphicalGapMatch(InputWidget):
+    
+    _model_name = Unicode('GraphicalGapMatchModel').tag(sync=True)
+    _view_name = Unicode('GraphicalGapMatchView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+    all_coords = List([]).tag(sync=True)
+    
+    value = List([]).tag(sync=True)
+    
+class GraphicalPositionObject(InputWidget):
+    
+    _model_name = Unicode('GraphicalPositionObjectModel').tag(sync=True)
+    _view_name = Unicode('GraphicalPositionObjectView').tag(sync=True)
+    
+    background_src = Any(None).tag(sync=True)
+    icon_src = Any(None).tag(sync=True)
+
+    value = List([]).tag(sync=True)

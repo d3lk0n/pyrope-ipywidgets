@@ -4,6 +4,7 @@
     --blue: #1476fb;
     --light-blue: #b8e2f4;
     --red: #ff0000;
+    --green: #00ff00;
     --light-red: #ffcccb;
     --grey: #8b8b8b;
     --light-grey: #efefef;
@@ -127,6 +128,210 @@ button.pyrope.ifield span.show {
 button.pyrope.ifield span.show span {
     display: block;
     padding: 0px 10px;
+}
+
+/* GraphicalHotspot widget. */
+div.graphical.hotspot {
+    display: block !important; 
+    position: relative;
+}
+
+div.graphical.hotspot img.background {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--black);
+    position: absolute;
+    z-index: 1;
+}
+
+div.graphical.hotspot img.icon {
+    z-index: 2;
+    display: inline;
+    position: absolute;
+}
+
+div.graphical.hotspot img.icon.unselected {
+    opacity: 40%;
+}
+
+/* GraphicalSelectPoint widget. */
+div.graphical.selectpoint {
+    display: block !important;;    
+    position: relative;
+}
+
+div.graphical.selectpoint img.background {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--black);
+    position: absolute;
+    z-index: 1;
+}
+
+div.graphical.selectpoint img.icon {
+    z-index: 2;
+    display: inline;
+    position: absolute;
+}
+
+/* GraphicalOrder widget. */
+div.graphical.order {
+    display: block !important;;    
+    position: relative;
+}
+
+div.graphical.order img.background {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--black); 
+    position: absolute;
+    z-index: 1;
+}
+
+div.graphical.order div.icon { 
+    z-index: 4;
+    display: inline-flex;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+}
+
+div.graphical.order div.icon img.icon { 
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    z-index: 2;
+}
+
+div.graphical.order div.icon span.icon { 
+    display: inline-block;
+    z-index: 3;
+}
+
+/* GraphicalAssociate widget. */
+div.graphical.associate {
+    display: block !important;;    
+    position: relative;
+}
+
+div.graphical.associate canvas.background {
+    position: absolute;
+    z-index: 2;
+}
+
+div.graphical.associate canvas.solution-canvas {
+    position: absolute;
+    z-index: 3;
+}
+
+div.graphical.associate canvas.drawing {
+    position: absolute;
+    z-index: 5;
+}
+
+div.graphical.associate img.background {
+    height: 100%;
+    width: 100%;
+    border: 1px solid var(--black); 
+    position: absolute;
+    z-index: 1;
+}
+
+div.graphical.associate img.icon {
+    z-index: 4;
+    display: inline;
+    position: absolute;
+}
+
+/* GraphicalGapMatch widget. */
+div.graphical.gapmatch {
+    display: flex !important;
+    position: relative;
+    justify-self: start;    
+}
+
+div.graphical.gapmatch img.background {
+    border: 1px solid var(--black);
+    z-index: 1;
+}
+
+div.graphical.gapmatch img.gap {
+    z-index: 2;
+    position: absolute;
+    opacity: 30%;
+}
+
+div.graphical.gapmatch img.gap.selected {
+    opacity: 100%;
+}
+
+div.graphical.gapmatch div.icon-stack {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+}
+
+/* GraphicalPositionObject widget. */
+div.graphical.positionobject {
+    display: flex !important;;
+    position: relative;
+    justify-content: start;
+    z-index: 3;
+}
+
+div.graphical.positionobject img.background {
+    border: 1px solid var(--black);
+    z-index: 1;
+}
+
+div.graphical.positionobject div.icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+div.graphical.positionobject img.icon {
+    z-index: 2;
+    position: absolute;
+}
+
+/* Graphical Widgets Reset */
+div.graphical.reset-button {
+    display: inline-flex !important;;
+    position: relative;
+    height: 30px;
+    align-items: center;
+    justify-content: center;    
+}
+
+div.graphical.reset-button button {
+    border: 1px solid var(--black);
+    text-align: center;
+    height: 25px;
+}
+
+/* Graphical Widgets Tooltips. */
+div.graphical span.graphical.solution.show,
+div.graphical div.graphical.solution.show,
+div.graphical img.graphical.solution.show {
+    outline: solid 2px var(--green);
+}
+
+div.graphical span.graphical.solution-text {
+    outline: solid 2px var(--green);
+    margin-left: 3px;
+    display: inline-block;
+    z-index: 4;
+}
+
+div.graphical span.graphical.solution-text.hide {
+    display: none !important;
+}
+
+div.graphical div.graphical.solution-area {
+    position: absolute;
+    z-index: 3;
 }
 
 /* Last paragraph does not need margin so that the preamble is vertically
